@@ -1,0 +1,307 @@
+<!-- ==== AGREGAR ESTO AL PRINCIPIO DEL ARCHIVO ==== -->
+<style>
+  /* Fuerzar dimensiones exactas */
+  .dashboard-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+  
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  @media (min-width: 768px) {
+    .cards-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .cards-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  .dashboard-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+    cursor: pointer;
+    text-align: left;
+    border: none;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .dashboard-card:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .next-match-card {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    min-height: 140px;
+  }
+</style>
+<!-- ==== FIN DEL CSS TEMPORAL ==== -->
+
+<!-- EL RESTO DE TU HTML ACTUAL CONTINÚA AQUÍ -->
+<!-- Dashboard Jugador -->
+<div class="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900">
+
+
+  <!-- Navigation -->
+  <nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex justify-between items-center py-4">
+        <div class="flex items-center space-x-3">
+          <div class="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center">
+            <span class="text-white font-bold">⚽</span>
+          </div>
+          <h1 class="text-xl font-bold text-gray-800">Panel de Jugador</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="text-gray-700">Bienvenido, {{ currentUser?.firstName }}</span>
+          <button (click)="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200">
+            Salir
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto p-6">
+    <!-- Quick Actions Grid -->
+   <!-- ==== REEMPLAZAR ESTA SECCIÓN ==== -->
+<div class="cards-grid">
+  <button (click)="showPlayerProfile()" class="dashboard-card">
+    <div class="text-3xl mb-3">👤</div>
+    <h3 class="text-lg font-semibold text-gray-800">Mi Perfil</h3>
+    <p class="text-gray-600">Ver y editar información personal</p>
+  </button>
+
+  <button (click)="showTrainings()" class="dashboard-card">
+    <div class="text-3xl mb-3">📅</div>
+    <h3 class="text-lg font-semibold text-gray-800">Entrenamientos</h3>
+    <p class="text-gray-600">Ver entrenamientos programados</p>
+  </button>
+
+  <button (click)="showPlayerStats()" class="dashboard-card">
+    <div class="text-3xl mb-3">📊</div>
+    <h3 class="text-lg font-semibold text-gray-800">Estadísticas</h3>
+    <p class="text-gray-600">Ver mi rendimiento</p>
+  </button>
+
+  <div class="dashboard-card next-match-card">
+    <div class="text-3xl mb-3">🏆</div>
+    <h3 class="text-lg font-semibold">Próximo Partido</h3>
+    <p class="text-blue-100">{{ playerStats.nextMatch }}</p>
+  </div>
+</div>
+<!-- ==== FIN DEL REEMPLAZO ==== -->
+
+    <!-- Dynamic Content Area -->
+    <div class="bg-white rounded-xl shadow-lg p-6 min-h-[400px]">
+      
+      <!-- Welcome View -->
+      <div *ngIf="currentView === 'welcome'" class="fade-in">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Bienvenido, {{ currentUser?.firstName }}</h2>
+        <p class="text-gray-600 mb-6">Selecciona una opción del menú para comenzar.</p>
+        
+        <!-- Demo Section -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md">
+          <h3 class="text-lg font-semibold text-blue-800 mb-2">Demo: Ver Funcionalidad</h3>
+          <p class="text-blue-600 mb-3">Haz clic para simular entrenamientos creados por un entrenador.</p>
+          <button 
+            (click)="simulateCoachCreatedTrainings()"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+            Simular Entrenamientos
+          </button>
+        </div>
+      </div>
+
+      <!-- Profile View -->
+      <div *ngIf="currentView === 'profile'" class="fade-in">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Mi Perfil</h2>
+        
+        <div *ngIf="loading" class="text-center py-8">
+          <p class="text-gray-600">Cargando perfil...</p>
+        </div>
+
+        <div *ngIf="!loading && userProfile" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Columna Izquierda -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+              <input type="text" [(ngModel)]="userProfile.firstName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+              <input type="text" [(ngModel)]="userProfile.lastName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" [(ngModel)]="userProfile.email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+              <input type="text" [(ngModel)]="userProfile.username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <!-- Columna Derecha -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Edad</label>
+              <input type="number" [(ngModel)]="userProfile.age" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+              <input type="tel" [(ngModel)]="userProfile.phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Posición</label>
+              <select [(ngModel)]="userProfile.position" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="PORTERO">Portero</option>
+                <option value="DEFENSA">Defensa</option>
+                <option value="MEDIOCAMPO">Mediocampo</option>
+                <option value="DELANTERO">Delantero</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Número de Camiseta</label>
+              <input type="number" [(ngModel)]="userProfile.jerseyNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <button (click)="updateProfile()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+            Guardar Cambios
+          </button>
+        </div>
+      </div>
+
+      <!-- Trainings View -->
+      <div *ngIf="currentView === 'trainings'" class="fade-in">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Entrenamientos Programados</h2>
+        
+        <div *ngIf="trainings.length === 0" class="text-center py-12">
+          <div class="text-6xl mb-4">📅</div>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay entrenamientos programados</h3>
+          <p class="text-gray-500 max-w-md mx-auto">
+            Los entrenamientos aparecerán aquí cuando un entrenador los programe para el equipo.
+          </p>
+        </div>
+
+        <div *ngIf="trainings.length > 0" class="space-y-4">
+          <div *ngFor="let training of trainings" 
+               class="border-l-4 p-4 rounded-lg"
+               [class]="training.bgClass + ' ' + training.borderClass">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <h3 class="font-semibold text-gray-800 text-lg mb-1">{{ training.title }}</h3>
+                <p class="text-gray-600 mb-1">{{ training.date }}</p>
+                <p class="text-sm text-gray-500">Entrenador: {{ training.coach }}</p>
+              </div>
+              <span [class]="training.statusClass + ' text-white px-3 py-1 rounded-full text-sm font-medium'">
+                {{ training.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+                     <!-- Stats View -->
+      <div *ngIf="currentView === 'stats'" class="fade-in">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Mis Estadísticas</h2>
+        
+        <!-- Stats con mismo ancho que Rendimiento por Mes -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4 rounded-xl text-white text-center">
+            <h3 class="text-sm font-semibold mb-2">Partidos ⚽</h3>
+            <p class="text-2xl font-bold">{{ playerStats.matchesPlayed }}</p>
+          </div>
+
+          <div class="bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-xl text-white text-center">
+            <h3 class="text-sm font-semibold mb-2">Goles 🥅</h3>
+            <p class="text-2xl font-bold">{{ playerStats.goals }}</p>
+          </div>
+
+          <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-4 rounded-xl text-white text-center">
+            <h3 class="text-sm font-semibold mb-2">Asistencias 🎯</h3>
+            <p class="text-2xl font-bold">{{ playerStats.assists }}</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Rendimiento por Mes</h3>
+          <div class="text-center text-gray-500 py-12">
+            <div class="text-4xl mb-2">📊</div>
+            <p>Gráfico de rendimiento - En desarrollo</p>
+            <p class="text-sm">Esta funcionalidad estará disponible pronto</p>
+          </div>
+        </div>
+      </div>
+      
+
+    </div>
+  </div>
+
+  <!-- Floating Action Buttons -->
+  <button (click)="toggleCalendar()" 
+          class="fixed left-4 top-4 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition duration-200 z-40">
+    📅
+  </button>
+
+  <button (click)="toggleChat()" 
+          class="fixed right-4 bottom-4 bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition duration-200 z-40">
+    💬
+  </button>
+</div>
+
+<!-- Calendar Sidebar -->
+<div [class.hidden]="!calendarVisible" 
+     class="fixed left-0 top-0 h-full w-80 bg-white shadow-2xl z-50 overflow-y-auto transition-transform duration-300"
+     [class.translate-x-0]="calendarVisible"
+     [class.-translate-x-full]="!calendarVisible">
+  <div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold text-gray-800">📅 Calendario</h2>
+      <button (click)="toggleCalendar()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+    </div>
+    <div class="text-center py-8">
+      <div class="text-4xl mb-4">🗓️</div>
+      <p class="text-gray-500">Funcionalidad de calendario en desarrollo</p>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Sidebar -->
+<div [class.hidden]="!chatVisible" 
+     class="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300"
+     [class.translate-x-0]="chatVisible"
+     [class.translate-x-full]="!chatVisible">
+  <div class="p-4 border-b bg-green-600 text-white">
+    <div class="flex justify-between items-center">
+      <h2 class="text-lg font-bold">💬 Chat del Equipo</h2>
+      <button (click)="toggleChat()" class="text-white hover:text-gray-200 text-2xl">×</button>
+    </div>
+  </div>
+  <div class="flex-1 p-4">
+    <div class="text-center py-8">
+      <div class="text-4xl mb-4">💬</div>
+      <p class="text-gray-500">Funcionalidad de chat en desarrollo</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,152 @@
+<!-- Pantalla de Login -->
+<div *ngIf="!showRegister && !showRecovery" class="min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
+    <div class="text-center mb-8">
+      <div class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+        <span class="text-white text-2xl font-bold">⚽</span>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">OrbitFit</h1>
+      <p class="text-gray-600">Gestión integral para equipos</p>
+    </div>
+
+    <form (ngSubmit)="onLogin()" class="space-y-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+        <input type="email" [(ngModel)]="email" name="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="tu@email.com" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+        <input type="password" [(ngModel)]="password" name="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ingresa tu contraseña" required>
+      </div>
+
+      <button 
+        type="submit" 
+        [disabled]="loading"
+        class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 disabled:opacity-50">
+        {{ loading ? 'Iniciando...' : 'Iniciar Sesión' }}
+      </button>
+    </form>
+
+    <div class="mt-6 space-y-3">
+      <button (click)="showRegisterForm()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-200">
+        Registrarse (Solo Jugadores)
+      </button>
+      <button (click)="showRecoveryForm()" class="w-full text-blue-600 hover:text-blue-800 transition duration-200">
+        ¿Olvidaste tu contraseña?
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- El resto del HTML (registro y recuperación) se mantiene igual -->
+<!-- Pantalla de Registro -->
+<div *ngIf="showRegister" class="min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
+    <div class="text-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Registro de Jugador</h2>
+      <p class="text-gray-600">Completa tus datos</p>
+    </div>
+
+    <form (ngSubmit)="onRegister()" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+          <input type="text" [(ngModel)]="registerData.firstName" name="firstName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+          <input type="text" [(ngModel)]="registerData.lastName" name="lastName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input type="email" [(ngModel)]="registerData.email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Edad</label>
+          <input type="number" [(ngModel)]="registerData.age" name="age" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" min="16" max="50" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Posición</label>
+          <select [(ngModel)]="registerData.position" name="position" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+            <option value="PORTERO">Portero</option>
+            <option value="DEFENSA">Defensa</option>
+            <option value="MEDIOCAMPO">Mediocampo</option>
+            <option value="DELANTERO">Delantero</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+        <input type="text" [(ngModel)]="registerData.username" name="username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+        <input type="password" [(ngModel)]="registerData.password" name="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" required>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+          <input type="tel" [(ngModel)]="registerData.phone" name="phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Número Camiseta</label>
+          <input type="number" [(ngModel)]="registerData.jerseyNumber" name="jerseyNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button 
+          type="submit" 
+          [disabled]="registerLoading"
+          class="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-200 disabled:opacity-50">
+          {{ registerLoading ? 'Registrando...' : 'Registrarse' }}
+        </button>
+        <button 
+          type="button" 
+          (click)="showLoginForm()" 
+          class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition duration-200">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Pantalla de Recuperación -->
+<div *ngIf="showRecovery" class="min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
+    <div class="text-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Recuperar Contraseña</h2>
+      <p class="text-gray-600">Te enviaremos un enlace de recuperación</p>
+    </div>
+
+    <form (ngSubmit)="onRecovery()" class="space-y-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+        <input type="email" [(ngModel)]="recoveryEmail" name="recoveryEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="tu@email.com" required>
+      </div>
+
+      <div class="flex gap-3">
+        <button 
+          type="submit" 
+          class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
+          Enviar Enlace
+        </button>
+        <button 
+          type="button" 
+          (click)="showLoginForm()" 
+          class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition duration-200">
+          Volver
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
