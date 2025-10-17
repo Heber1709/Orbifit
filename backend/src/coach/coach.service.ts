@@ -210,121 +210,131 @@ export class CoachService {
   }
 }
   async saveTrainingResults(coachId: number, resultsData: any) {
-    console.log('💾 SERVICE: Guardando resultados');
+  console.log('💾 SERVICE: Guardando resultados');
 
-    const { trainingId, players, generalObservations, rating } = resultsData;
+  const { trainingId, players, generalObservations, rating } = resultsData;
 
-    try {
-      const training = await this.prisma.training.findFirst({
-        where: { 
-          id: parseInt(trainingId.toString()),
-          coachId: coachId 
+  try {
+    const training = await this.prisma.training.findFirst({
+      where: { 
+        id: parseInt(trainingId.toString()),
+        coachId: coachId 
+      }
+    });
+
+    if (!training) {
+      throw new Error('Entrenamiento no encontrado');
+    }
+
+    // 1. ELIMINAR resultados anteriores
+    await this.prisma.trainingResult.deleteMany({
+      where: { trainingId: parseInt(trainingId.toString()) }
+    });
+
+    // 2. GUARDAR observaciones generales en el entrenamiento
+    await this.prisma.training.update({
+      where: { id: parseInt(trainingId.toString()) },
+      data: {
+        description: generalObservations || training.description
+      }
+    });
+
+    // 3. GUARDAR resultados de jugadores
+    for (const [playerName, playerData] of Object.entries(players)) {
+      const nameParts = playerName.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ');
+
+      const player = await this.prisma.user.findFirst({
+        where: {
+          firstName: firstName,
+          lastName: lastName,
+          role: 'JUGADOR'
         }
       });
 
-      if (!training) {
-        throw new Error('Entrenamiento no encontrado');
-      }
-
-      await this.prisma.trainingResult.deleteMany({
-        where: { trainingId: parseInt(trainingId.toString()) }
-      });
-
-      for (const [playerName, playerData] of Object.entries(players)) {
-        const nameParts = playerName.split(' ');
-        const firstName = nameParts[0];
-        const lastName = nameParts.slice(1).join(' ');
-
-        const player = await this.prisma.user.findFirst({
-          where: {
-            firstName: firstName,
-            lastName: lastName,
-            role: 'JUGADOR'
+      if (player) {
+        const playerResultData: any = playerData;
+        
+        await this.prisma.trainingResult.create({
+          data: {
+            trainingId: parseInt(trainingId.toString()),
+            playerId: player.id,
+            endurance: this.mapRatingToNumber(playerResultData.endurance),
+            technique: this.mapRatingToNumber(playerResultData.technique),
+            attitude: this.mapRatingToNumber(playerResultData.attitude),
+            notes: playerResultData.observations || '',
           }
         });
-
-        if (player) {
-          const playerResultData: any = playerData;
-          
-          await this.prisma.trainingResult.create({
-            data: {
-              trainingId: parseInt(trainingId.toString()),
-              playerId: player.id,
-              endurance: this.mapRatingToNumber(playerResultData.endurance),
-              technique: this.mapRatingToNumber(playerResultData.technique),
-              attitude: this.mapRatingToNumber(playerResultData.attitude),
-              notes: playerResultData.observations || '',
-            }
-          });
-        }
       }
-
-      console.log('✅ SERVICE: Resultados guardados EXITOSAMENTE');
-      return { 
-        success: true,
-        message: 'Resultados guardados correctamente',
-        trainingId: trainingId
-      };
-
-    } catch (error) {
-      console.error('❌ SERVICE: Error guardando resultados:', error);
-      throw new Error('Error al guardar los resultados: ' + error.message);
     }
+
+    console.log('✅ SERVICE: Resultados guardados EXITOSAMENTE');
+    return { 
+      success: true,
+      message: 'Resultados guardados correctamente',
+      trainingId: trainingId
+    };
+
+  } catch (error) {
+    console.error('❌ SERVICE: Error guardando resultados:', error);
+    throw new Error('Error al guardar los resultados: ' + error.message);
   }
+}
 
   async getTrainingResults(coachId: number, trainingId: number) {
-    console.log('📋 SERVICE: Obteniendo resultados para entrenamiento', trainingId);
+  console.log('📋 SERVICE: Obteniendo resultados para entrenamiento', trainingId);
 
-    try {
-      const training = await this.prisma.training.findFirst({
-        where: { 
-          id: trainingId,
-          coachId: coachId 
-        }
-      });
-
-      if (!training) {
-        return null;
+  try {
+    const training = await this.prisma.training.findFirst({
+      where: { 
+        id: trainingId,
+        coachId: coachId 
       }
+    });
 
-      const trainingResults = await this.prisma.trainingResult.findMany({
-        where: { trainingId },
-        include: {
-          player: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              position: true
-            }
-          }
-        }
-      });
-
-      const players: any = {};
-      trainingResults.forEach(result => {
-        const playerName = `${result.player.firstName} ${result.player.lastName}`;
-        players[playerName] = {
-          endurance: this.mapNumberToRating(result.endurance),
-          technique: this.mapNumberToRating(result.technique),
-          attitude: this.mapNumberToRating(result.attitude),
-          observations: result.notes || ''
-        };
-      });
-
-      return {
-        trainingId,
-        players,
-        generalObservations: '',
-        rating: 0,
-        playerResults: trainingResults
-      };
-
-    } catch (error) {
-      console.error('❌ SERVICE: Error obteniendo resultados:', error);
+    if (!training) {
       return null;
     }
+
+    const trainingResults = await this.prisma.trainingResult.findMany({
+      where: { trainingId },
+      include: {
+        player: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            position: true
+          }
+        }
+      }
+    });
+
+    const players: any = {};
+    trainingResults.forEach(result => {
+      const playerName = `${result.player.firstName} ${result.player.lastName}`;
+      players[playerName] = {
+        endurance: this.mapNumberToRating(result.endurance),
+        technique: this.mapNumberToRating(result.technique),
+        attitude: this.mapNumberToRating(result.attitude),
+        observations: result.notes || ''
+      };
+    });
+
+    return {
+      trainingId,
+      players,
+      generalObservations: training.description || '', // ← Cargar observaciones del entrenamiento
+      rating: 0,
+      playerResults: trainingResults
+    };
+
+  } catch (error) {
+    console.error('❌ SERVICE: Error obteniendo resultados:', error);
+    return null;
   }
+}
 
   async deleteTrainingResults(coachId: number, trainingId: number) {
     console.log('🗑️ SERVICE: Eliminando resultados del entrenamiento', trainingId);

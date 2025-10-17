@@ -145,7 +145,6 @@ export class CoachDashboardComponent implements OnInit {
     this.loadTeamStats();
     this.generateCalendar();
     this.loadTrainingsFromDatabase();
-    this.loadSavedResults();
     this.updateNextEvent();
   }
 
@@ -198,94 +197,105 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   loadTeamStats() {
-    this.trainingService.getTeamStats().subscribe({
-      next: (stats) => {
-        this.teamStats = {
-          ...stats,
-          ...this.calculateAdvancedStats()
-        };
-      },
-      error: (error) => {
-        console.error('Error cargando estadísticas:', error);
-        this.teamStats = {
-          activePlayers: 0,
-          trainings: 0,
-          matchesPlayed: 0,
-          wins: 0,
-          playerPerformance: [],
-          trainingTypes: [],
-          totalTrainingTime: 0,
-          averageRating: 0
-        };
-      }
-    });
-  }
+  this.trainingService.getTeamStats().subscribe({
+    next: (stats) => {
+      this.teamStats = {
+        ...stats,
+        ...this.calculateAdvancedStats() // ← Esto ahora incluirá los resultados
+      };
+    },
+    error: (error) => {
+      console.error('Error cargando estadísticas:', error);
+      this.teamStats = {
+        activePlayers: 0,
+        trainings: 0,
+        matchesPlayed: 0,
+        wins: 0,
+        playerPerformance: [],
+        trainingTypes: [],
+        totalTrainingTime: 0,
+        averageRating: 0
+      };
+    }
+  });
+}
 
   calculateAdvancedStats() {
-    const trainingTypes: any = {};
-    let totalTrainingTime = 0;
-    let totalRating = 0;
-    let ratingCount = 0;
+  const trainingTypes: any = {};
+  let totalTrainingTime = 0;
+  let totalRating = 0;
+  let ratingCount = 0;
 
-    this.availableTrainings.forEach(training => {
-      const type = this.reverseMapTrainingType(training.type);
-      trainingTypes[type] = (trainingTypes[type] || 0) + 1;
-      totalTrainingTime += training.duration || 0;
-    });
+  this.availableTrainings.forEach(training => {
+    const type = this.reverseMapTrainingType(training.type);
+    trainingTypes[type] = (trainingTypes[type] || 0) + 1;
+    totalTrainingTime += training.duration || 0;
+  });
 
-    this.savedResults.forEach(result => {
-      if (result.rating) {
-        totalRating += result.rating;
-        ratingCount++;
-      }
-    });
+  // Cargar resultados para calcular estadísticas
+  this.loadResultsForStats();
 
-    const playerPerformance = this.calculatePlayerPerformance();
+  const playerPerformance = this.calculatePlayerPerformance();
 
-    return {
-      playerPerformance,
-      trainingTypes: Object.keys(trainingTypes).map(type => ({
-        type,
-        count: trainingTypes[type],
-        percentage: Math.round((trainingTypes[type] / this.availableTrainings.length) * 100)
-      })),
-      totalTrainingTime,
-      averageRating: ratingCount > 0 ? Math.round((totalRating / ratingCount) * 10) / 10 : 0
-    };
-  }
+  return {
+    playerPerformance,
+    trainingTypes: Object.keys(trainingTypes).map(type => ({
+      type,
+      count: trainingTypes[type],
+      percentage: Math.round((trainingTypes[type] / this.availableTrainings.length) * 100)
+    })),
+    totalTrainingTime,
+    averageRating: ratingCount > 0 ? Math.round((totalRating / ratingCount) * 10) / 10 : 0
+  };
+}
+
+loadResultsForStats() {
+  this.trainingService.getAllTrainingResults().subscribe({
+    next: (results) => {
+      console.log('📊 Resultados cargados para estadísticas:', results.length);
+      this.savedResults = results; // Mantenemos esto solo para estadísticas
+      this.loadTeamStats(); // Recargar estadísticas con los nuevos datos
+    },
+    error: (error) => {
+      console.error('Error cargando resultados para estadísticas:', error);
+      this.savedResults = [];
+    }
+  });
+}
 
   calculatePlayerPerformance() {
-    const playerStats: any = {};
+  const playerStats: any = {};
 
-    this.savedResults.forEach(result => {
-      if (result.players) {
-        Object.keys(result.players).forEach(playerName => {
-          if (!playerStats[playerName]) {
-            playerStats[playerName] = {
-              name: playerName,
-              totalScore: 0,
-              evaluations: 0,
-              position: this.getPlayerPosition(playerName)
-            };
-          }
+  // Usar savedResults que ahora se carga desde loadResultsForStats()
+  this.savedResults.forEach(result => {
+    if (result.players) {
+      Object.keys(result.players).forEach(playerName => {
+        if (!playerStats[playerName]) {
+          playerStats[playerName] = {
+            name: playerName,
+            totalScore: 0,
+            evaluations: 0,
+            position: this.getPlayerPosition(playerName)
+          };
+        }
 
-          const playerResult = result.players[playerName];
-          const score = this.calculatePlayerScore(playerResult);
-          playerStats[playerName].totalScore += score;
-          playerStats[playerName].evaluations++;
-        });
-      }
-    });
+        const playerResult = result.players[playerName];
+        const score = this.calculatePlayerScore(playerResult);
+        playerStats[playerName].totalScore += score;
+        playerStats[playerName].evaluations++;
+      });
+    }
+  });
 
-    return Object.values(playerStats)
-      .map((player: any) => ({
-        ...player,
-        performance: player.evaluations > 0 ? Math.round((player.totalScore / player.evaluations) * 10) / 10 : 0,
-        trend: 'up'
-      }))
-      .sort((a: any, b: any) => b.performance - a.performance)
-      .slice(0, 5);
-  }
+  return Object.values(playerStats)
+    .map((player: any) => ({
+      ...player,
+      performance: player.evaluations > 0 ? Math.round((player.totalScore / player.evaluations) * 10) / 10 : 0,
+      trend: 'up'
+    }))
+    .sort((a: any, b: any) => b.performance - a.performance)
+    .slice(0, 5);
+}
 
   calculatePlayerScore(playerResult: PlayerResult): number {
     let score = 0;
@@ -335,8 +345,7 @@ testResults() {
     rating: r.rating
   })));
   
-  // Forzar recarga desde backend
-  this.loadSavedResults();
+
 }
   processTrainingsForCalendar(trainings: any[]) {
     this.calendarEvents = {};
@@ -413,13 +422,12 @@ testResults() {
   showRecordResults() {
     this.currentView = 'record';
     this.loadAvailableTrainings();
-    this.loadSavedResults();
   }
 
   showTeamStats() {
-    this.currentView = 'teamstats';
-    this.loadTeamStats();
-  }
+  this.currentView = 'teamstats';
+  this.loadResultsForStats(); // ← Agregar esta línea
+}
 
   toggleCalendar() {
     this.calendarVisible = !this.calendarVisible;
@@ -773,23 +781,7 @@ testResults() {
     }
   });
 }
-// ==== MÉTODOS DE RESULTADOS ====
 
-loadSavedResults() {
-  console.log('🔄 Cargando resultados guardados...');
-  
-  this.trainingService.getAllTrainingResults().subscribe({
-    next: (results) => {
-      console.log('✅ Resultados recibidos:', results);
-      this.savedResults = Array.isArray(results) ? results : [];
-      console.log(`💾 ${this.savedResults.length} resultados cargados`);
-    },
-    error: (error) => {
-      console.error('❌ Error cargando resultados:', error);
-      this.savedResults = [];
-    }
-  });
-}
 
 selectTrainingForResults(training: any) {
   console.log('🎯 Seleccionando entrenamiento para resultados:', training.id);
@@ -865,8 +857,8 @@ saveTrainingResults() {
       console.log('✅ Resultados guardados:', response);
       alert('¡Resultados guardados exitosamente!');
       
-      this.loadSavedResults();
       this.clearResultsForm();
+      this.loadResultsForStats(); // ← Agregar esta línea para actualizar stats
       this.showWelcome();
     },
     error: (error) => {
@@ -892,9 +884,9 @@ updateTrainingResults() {
       console.log('✅ Resultados actualizados:', response);
       alert('¡Resultados actualizados exitosamente!');
       
-      this.loadSavedResults();
-      this.clearResultsForm();
-      this.showWelcome();
+    this.clearResultsForm();
+    this.loadResultsForStats(); 
+    this.showWelcome();
     },
     error: (error) => {
       this.loading = false;
@@ -914,7 +906,10 @@ deleteTrainingResults(trainingId: number) {
         this.loading = false;
         console.log('✅ Resultados eliminados:', response);
         
-        this.savedResults = this.savedResults.filter(result => result.trainingId !== trainingId);
+        // Recargar entrenamientos para actualizar la lista
+        this.loadAvailableTrainings();
+        this.clearResultsForm();
+        this.loadResultsForStats();
         alert('¡Resultados eliminados exitosamente!');
       },
       error: (error) => {
@@ -925,25 +920,8 @@ deleteTrainingResults(trainingId: number) {
     });
   }
 }
-// ==== MÉTODOS FALTANTES PARA EL TEMPLATE ====
 
-showSavedResultsList() {
-  this.showSavedResults = true;
-}
 
-hideSavedResultsList() {
-  this.showSavedResults = false;
-}
-
-editSavedResults(result: any) {
-  const training = this.availableTrainings.find(t => t.id === result.trainingId);
-  if (training) {
-    this.selectTrainingForResults(training);
-    this.hideSavedResultsList();
-  } else {
-    alert('No se encontró el entrenamiento asociado a estos resultados');
-  }
-}
 
 getPlayerNames(): string[] {
   return Object.keys(this.trainingResults.players);
@@ -976,7 +954,6 @@ clearResultsForm() {
     generalObservations: '',
     rating: 0
   };
-  this.showSavedResults = false;
 }
 
 hasExistingResults(): boolean {
