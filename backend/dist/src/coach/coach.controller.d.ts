@@ -6,20 +6,16 @@ export declare class CoachController {
         id: number;
         name: string;
         position: string;
-        jerseyNumber: number;
-        age: number;
     }[]>;
     getTeamStats(req: any): Promise<{
         activePlayers: number;
         trainings: number;
         matchesPlayed: number;
         wins: number;
-        topPlayers: any[];
     }>;
     getCoachProfile(req: any): Promise<{
         id: number;
         email: string;
-        username: string;
         firstName: string;
         lastName: string;
         role: import(".prisma/client").$Enums.UserRole;
@@ -28,4 +24,129 @@ export declare class CoachController {
         experienceYears: number;
         specialization: string;
     }>;
+    getCoachTrainings(req: any): Promise<({
+        participants: ({
+            player: {
+                id: number;
+                firstName: string;
+                lastName: string;
+            };
+        } & {
+            id: number;
+            confirmed: boolean;
+            attended: boolean | null;
+            playerId: number;
+            trainingId: number;
+        })[];
+    } & {
+        id: number;
+        title: string;
+        description: string | null;
+        type: import(".prisma/client").$Enums.TrainingType;
+        date: Date;
+        duration: number;
+        location: string | null;
+        status: import(".prisma/client").$Enums.TrainingStatus;
+        coachId: number;
+    })[]>;
+    createTraining(req: any, trainingData: any): Promise<{
+        participants: ({
+            player: {
+                id: number;
+                firstName: string;
+                lastName: string;
+            };
+        } & {
+            id: number;
+            confirmed: boolean;
+            attended: boolean | null;
+            playerId: number;
+            trainingId: number;
+        })[];
+    } & {
+        id: number;
+        title: string;
+        description: string | null;
+        type: import(".prisma/client").$Enums.TrainingType;
+        date: Date;
+        duration: number;
+        location: string | null;
+        status: import(".prisma/client").$Enums.TrainingStatus;
+        coachId: number;
+    }>;
+    updateTraining(req: any, trainingId: number, trainingData: any): Promise<{
+        id: number;
+        title: string;
+        description: string | null;
+        type: import(".prisma/client").$Enums.TrainingType;
+        date: Date;
+        duration: number;
+        location: string | null;
+        status: import(".prisma/client").$Enums.TrainingStatus;
+        coachId: number;
+    }>;
+    deleteTraining(req: any, trainingId: number): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    saveTrainingResults(req: any, resultsData: any): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    getTrainingResults(req: any, trainingId: number): Promise<{
+        trainingId: number;
+        players: any;
+        generalObservations: string;
+        rating: number;
+        playerResults: ({
+            player: {
+                id: number;
+                firstName: string;
+                lastName: string;
+                position: import(".prisma/client").$Enums.PlayerPosition;
+            };
+        } & {
+            id: number;
+            playerId: number;
+            trainingId: number;
+            endurance: number | null;
+            technique: number | null;
+            attitude: number | null;
+            notes: string | null;
+        })[];
+    }>;
+    updateTrainingResults(req: any, trainingId: number, resultsData: any): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    deleteTrainingResults(req: any, trainingId: number): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    getAllTrainingResults(req: any): Promise<{
+        trainingId: number;
+        training: {
+            id: number;
+            title: string;
+            type: import(".prisma/client").$Enums.TrainingType;
+            date: Date;
+        };
+        playerResults: ({
+            player: {
+                firstName: string;
+                lastName: string;
+            };
+        } & {
+            id: number;
+            playerId: number;
+            trainingId: number;
+            endurance: number | null;
+            technique: number | null;
+            attitude: number | null;
+            notes: string | null;
+        })[];
+        generalObservations: string;
+        rating: number;
+        updatedAt: Date;
+    }[]>;
 }

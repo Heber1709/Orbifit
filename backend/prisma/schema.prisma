@@ -57,7 +57,7 @@ model Training {
   description String?
   type        TrainingType
   date        DateTime
-  duration    Int // en minutos
+  duration    Int
   coachId     Int
   location    String?
   status      TrainingStatus @default(PROGRAMADO)
@@ -101,9 +101,9 @@ model TrainingResult {
   id          Int     @id @default(autoincrement())
   trainingId  Int
   playerId    Int
-  endurance   Int?   // 1-5
-  technique   Int?   // 1-5
-  attitude    Int?   // 1-5
+  endurance   Int?
+  technique   Int?
+  attitude    Int?
   notes       String?
 
   training    Training @relation(fields: [trainingId], references: [id])

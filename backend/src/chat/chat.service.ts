@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { MessageType } from '@prisma/client';
 
 @Injectable()
 export class ChatService {
   constructor(private prisma: PrismaService) {}
 
-  async getGeneralMessages() {
+  async getMessages() {
     return this.prisma.message.findMany({
-      where: { type: 'GENERAL' },
+      orderBy: { id: 'asc' }, // CAMBIADO: createdAt por id
       include: {
         sender: {
           select: {
@@ -18,8 +17,15 @@ export class ChatService {
             role: true,
           },
         },
+        receiver: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
       },
-      orderBy: { createdAt: 'asc' },
     });
   }
 
@@ -27,41 +33,21 @@ export class ChatService {
     return this.prisma.message.findMany({
       where: {
         OR: [
-          {
-            senderId: userId,
-            receiverId: receiverId,
-            type: 'PRIVADO',
-          },
-          {
-            senderId: receiverId,
-            receiverId: userId,
-            type: 'PRIVADO',
-          },
+          { senderId: userId, receiverId: receiverId },
+          { senderId: receiverId, receiverId: userId },
         ],
       },
+      orderBy: { id: 'asc' }, // CAMBIADO: createdAt por id
       include: {
         sender: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
+            role: true,
           },
         },
-      },
-      orderBy: { createdAt: 'asc' },
-    });
-  }
-
-  async sendMessage(messageData: {
-    content: string;
-    type: MessageType;
-    senderId: number;
-    receiverId?: number;
-  }) {
-    return this.prisma.message.create({
-      data: messageData,
-      include: {
-        sender: {
+        receiver: {
           select: {
             id: true,
             firstName: true,
@@ -73,16 +59,31 @@ export class ChatService {
     });
   }
 
-  async getOnlineUsers() {
-    // En una implementación real, usarías WebSockets para trackear usuarios online
-    // Por ahora, devolvemos todos los usuarios activos
-    return this.prisma.user.findMany({
-      where: { isActive: true },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        role: true,
+  async sendMessage(senderId: number, content: string, receiverId?: number) {
+    return this.prisma.message.create({
+      data: {
+        content,
+        senderId,
+        receiverId,
+        type: receiverId ? 'PRIVADO' : 'GENERAL',
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
+        receiver: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+          },
+        },
       },
     });
   }

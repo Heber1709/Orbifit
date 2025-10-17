@@ -8,6 +8,22 @@ async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.enableCors();
     app.useGlobalPipes(new common_1.ValidationPipe());
+    const server = app.getHttpServer();
+    const router = server._events.request._router;
+    const availableRoutes = router.stack
+        .map(layer => {
+        if (layer.route) {
+            return {
+                path: layer.route?.path,
+                method: layer.route?.stack[0].method,
+            };
+        }
+    })
+        .filter(item => item !== undefined);
+    console.log('🛣️  RUTAS REGISTRADAS:');
+    availableRoutes.forEach(route => {
+        console.log(`${route.method.toUpperCase()} ${route.path}`);
+    });
     const config = new swagger_1.DocumentBuilder()
         .setTitle('OrbitFit API')
         .setDescription('Sistema de gestión deportiva')
@@ -17,6 +33,7 @@ async function bootstrap() {
     const document = swagger_1.SwaggerModule.createDocument(app, config);
     swagger_1.SwaggerModule.setup('api', app, document);
     await app.listen(3000);
+    console.log('🚀 Application is running on: http://localhost:3000');
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

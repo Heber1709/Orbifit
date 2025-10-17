@@ -11,8 +11,6 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
-const calendar_module_1 = require("./calendar/calendar.module");
-const chat_module_1 = require("./chat/chat.module");
 const database_module_1 = require("./database/database.module");
 const coach_module_1 = require("./coach/coach.module");
 let AppModule = class AppModule {
@@ -27,8 +25,6 @@ exports.AppModule = AppModule = __decorate([
             database_module_1.DatabaseModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
-            calendar_module_1.CalendarModule,
-            chat_module_1.ChatModule,
             coach_module_1.CoachModule,
         ],
     })

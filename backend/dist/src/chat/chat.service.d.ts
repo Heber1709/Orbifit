@@ -1,10 +1,15 @@
 import { PrismaService } from '../database/prisma.service';
-import { MessageType } from '@prisma/client';
 export declare class ChatService {
     private prisma;
     constructor(prisma: PrismaService);
-    getGeneralMessages(): Promise<({
+    getMessages(): Promise<({
         sender: {
+            id: number;
+            firstName: string;
+            lastName: string;
+            role: import(".prisma/client").$Enums.UserRole;
+        };
+        receiver: {
             id: number;
             firstName: string;
             lastName: string;
@@ -23,6 +28,13 @@ export declare class ChatService {
             id: number;
             firstName: string;
             lastName: string;
+            role: import(".prisma/client").$Enums.UserRole;
+        };
+        receiver: {
+            id: number;
+            firstName: string;
+            lastName: string;
+            role: import(".prisma/client").$Enums.UserRole;
         };
     } & {
         id: number;
@@ -32,13 +44,14 @@ export declare class ChatService {
         senderId: number;
         receiverId: number | null;
     })[]>;
-    sendMessage(messageData: {
-        content: string;
-        type: MessageType;
-        senderId: number;
-        receiverId?: number;
-    }): Promise<{
+    sendMessage(senderId: number, content: string, receiverId?: number): Promise<{
         sender: {
+            id: number;
+            firstName: string;
+            lastName: string;
+            role: import(".prisma/client").$Enums.UserRole;
+        };
+        receiver: {
             id: number;
             firstName: string;
             lastName: string;
@@ -52,10 +65,4 @@ export declare class ChatService {
         senderId: number;
         receiverId: number | null;
     }>;
-    getOnlineUsers(): Promise<{
-        id: number;
-        firstName: string;
-        lastName: string;
-        role: import(".prisma/client").$Enums.UserRole;
-    }[]>;
 }

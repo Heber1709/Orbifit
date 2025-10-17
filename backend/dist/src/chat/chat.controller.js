@@ -14,60 +14,49 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatController = void 0;
 const common_1 = require("@nestjs/common");
-const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
+const passport_1 = require("@nestjs/passport");
 const chat_service_1 = require("./chat.service");
 let ChatController = class ChatController {
     constructor(chatService) {
         this.chatService = chatService;
     }
-    getGeneralMessages() {
-        return this.chatService.getGeneralMessages();
+    async getMessages() {
+        return this.chatService.getMessages();
     }
-    getPrivateMessages(receiverId, req) {
-        return this.chatService.getPrivateMessages(req.user.userId, parseInt(receiverId));
+    async sendMessage(req, messageData) {
+        const { content, receiverId } = messageData;
+        return this.chatService.sendMessage(req.user.userId, content, receiverId);
     }
-    sendMessage(messageData, req) {
-        return this.chatService.sendMessage({
-            ...messageData,
-            senderId: req.user.userId,
-        });
-    }
-    getOnlineUsers() {
-        return this.chatService.getOnlineUsers();
+    async getPrivateMessages(req, receiverId) {
+        return this.chatService.getPrivateMessages(req.user.userId, receiverId);
     }
 };
 exports.ChatController = ChatController;
 __decorate([
-    (0, common_1.Get)('general'),
+    (0, common_1.Get)('messages'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], ChatController.prototype, "getGeneralMessages", null);
+    __metadata("design:returntype", Promise)
+], ChatController.prototype, "getMessages", null);
 __decorate([
-    (0, common_1.Get)('private/:receiverId'),
-    __param(0, (0, common_1.Param)('receiverId')),
-    __param(1, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
-], ChatController.prototype, "getPrivateMessages", null);
-__decorate([
-    (0, common_1.Post)('message'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.Request)()),
+    (0, common_1.Post)('send'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ChatController.prototype, "sendMessage", null);
 __decorate([
-    (0, common_1.Get)('online-users'),
+    (0, common_1.Get)('private/:receiverId'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('receiverId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], ChatController.prototype, "getOnlineUsers", null);
+    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:returntype", Promise)
+], ChatController.prototype, "getPrivateMessages", null);
 exports.ChatController = ChatController = __decorate([
     (0, common_1.Controller)('chat'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     __metadata("design:paramtypes", [chat_service_1.ChatService])
 ], ChatController);
 //# sourceMappingURL=chat.controller.js.map

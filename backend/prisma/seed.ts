@@ -171,34 +171,46 @@ async function main() {
   });
 
   // Crear estadísticas de jugadores
-  await prisma.playerStat.createMany({
-    data: [
-      {
-        playerId: player1.id,
-        matchesPlayed: 24,
-        goals: 8,
-        assists: 12,
-        year: 2024,
-        month: 12,
+const statsData = [
+  {
+    playerId: player1.id,
+    matchesPlayed: 24,
+    goals: 8,
+    assists: 12,
+    year: 2024,
+    month: 12,
+  },
+  {
+    playerId: player2.id,
+    matchesPlayed: 22,
+    goals: 3,
+    assists: 8,
+    year: 2024,
+    month: 12,
+  },
+  {
+    playerId: player3.id,
+    matchesPlayed: 20,
+    goals: 6,
+    assists: 4,
+    year: 2024,
+    month: 12,
+  },
+];
+
+for (const stat of statsData) {
+  await prisma.playerStat.upsert({
+    where: {
+      playerId_year_month: {
+        playerId: stat.playerId,
+        year: stat.year,
+        month: stat.month,
       },
-      {
-        playerId: player2.id,
-        matchesPlayed: 22,
-        goals: 3,
-        assists: 8,
-        year: 2024,
-        month: 12,
-      },
-      {
-        playerId: player3.id,
-        matchesPlayed: 20,
-        goals: 6,
-        assists: 4,
-        year: 2024,
-        month: 12,
-      },
-    ],
+    },
+    update: stat,
+    create: stat,
   });
+}
 
   // Crear mensajes de chat
   await prisma.message.createMany({

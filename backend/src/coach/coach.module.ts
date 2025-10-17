@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { CoachController } from './coach.controller';
 import { CoachService } from './coach.service';
-
-console.log('🔧 CoachModule está siendo cargado...'); // ← AGREGAR ESTO
+import { PrismaService } from '../database/prisma.service';
 
 @Module({
-  controllers: [CoachController],
-  providers: [CoachService],
+  controllers: [CoachController], // ← SOLO CoachController
+  providers: [CoachService, PrismaService],
   exports: [CoachService],
 })
 export class CoachModule {}

@@ -1,35 +1,25 @@
-import { Controller, Get, Post, Body, UseGuards, Request, Param } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Get, Post, Body, UseGuards, Req, Param, ParseIntPipe } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ChatService } from './chat.service';
 
 @Controller('chat')
-@UseGuards(JwtAuthGuard)
+@UseGuards(AuthGuard('jwt'))
 export class ChatController {
   constructor(private chatService: ChatService) {}
 
-  @Get('general')
-  getGeneralMessages() {
-    return this.chatService.getGeneralMessages();
+  @Get('messages')
+  async getMessages() {
+    return this.chatService.getMessages();
+  }
+
+  @Post('send')
+  async sendMessage(@Req() req, @Body() messageData: any) {
+    const { content, receiverId } = messageData;
+    return this.chatService.sendMessage(req.user.userId, content, receiverId);
   }
 
   @Get('private/:receiverId')
-  getPrivateMessages(@Param('receiverId') receiverId: string, @Request() req) {
-    return this.chatService.getPrivateMessages(
-      req.user.userId,
-      parseInt(receiverId),
-    );
-  }
-
-  @Post('message')
-  sendMessage(@Body() messageData: any, @Request() req) {
-    return this.chatService.sendMessage({
-      ...messageData,
-      senderId: req.user.userId,
-    });
-  }
-
-  @Get('online-users')
-  getOnlineUsers() {
-    return this.chatService.getOnlineUsers();
+  async getPrivateMessages(@Req() req, @Param('receiverId', ParseIntPipe) receiverId: number) {
+    return this.chatService.getPrivateMessages(req.user.userId, receiverId);
   }
 }

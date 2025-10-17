@@ -1,66 +1,90 @@
 :host {
   display: block;
+  min-height: 100vh;
 }
 
-// Estilos específicos para el dashboard del entrenador
-.coach-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
+// Estilos específicos para el componente
+.logout-btn {
+  background: #ef4444 !important;
+  color: white !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem !important;
+  border: none !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  transition: background-color 0.2s;
 
-.player-evaluation {
-  transition: all 0.2s ease;
-  
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: #dc2626 !important;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 
-.training-form {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-}
-
-// Animaciones
-.fade-in {
-  animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(10px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-.slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from { 
-    transform: translateX(-100%); 
-    opacity: 0;
-  }
-  to { 
-    transform: translateX(0); 
-    opacity: 1;
-  }
-}
-
-// Responsive
+// Responsive improvements
 @media (max-width: 768px) {
-  .coach-stats-grid {
-    grid-template-columns: 1fr;
+  .cards-grid {
+    grid-template-columns: 1fr !important;
   }
-  
-  .training-form {
-    padding: 1rem;
+
+  .content-area {
+    padding: 1rem !important;
+  }
+
+  .dashboard-card {
+    padding: 1rem !important;
+    min-height: 120px !important;
+  }
+
+  .floating-btn {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    font-size: 1rem !important;
   }
 }
+
+// Loading states
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+// Form improvements
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+// Animation for calendar events
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.event-item {
+  animation: slideInFromLeft 0.3s ease-out;
+}
+

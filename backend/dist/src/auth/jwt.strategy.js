@@ -24,8 +24,14 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         this.configService = configService;
     }
     async validate(payload) {
+        console.log('🔐 JWT Payload recibido:', payload);
+        console.log('🔐 JWT sub (userId):', payload.sub);
+        console.log('🔐 JWT email:', payload.email);
+        console.log('🔐 JWT role:', payload.role);
+        const userId = parseInt(payload.sub);
+        console.log('🔐 userId convertido a número:', userId);
         return {
-            userId: payload.sub,
+            userId: userId,
             email: payload.email,
             role: payload.role
         };

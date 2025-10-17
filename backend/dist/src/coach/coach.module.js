@@ -10,14 +10,14 @@ exports.CoachModule = void 0;
 const common_1 = require("@nestjs/common");
 const coach_controller_1 = require("./coach.controller");
 const coach_service_1 = require("./coach.service");
-console.log('🔧 CoachModule está siendo cargado...');
+const prisma_service_1 = require("../database/prisma.service");
 let CoachModule = class CoachModule {
 };
 exports.CoachModule = CoachModule;
 exports.CoachModule = CoachModule = __decorate([
     (0, common_1.Module)({
         controllers: [coach_controller_1.CoachController],
-        providers: [coach_service_1.CoachService],
+        providers: [coach_service_1.CoachService, prisma_service_1.PrismaService],
         exports: [coach_service_1.CoachService],
     })
 ], CoachModule);

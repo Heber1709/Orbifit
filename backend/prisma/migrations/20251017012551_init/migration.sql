@@ -72,13 +72,29 @@ CREATE TABLE "training_participants" (
 CREATE TABLE "training_results" (
     "id" SERIAL NOT NULL,
     "trainingId" INTEGER NOT NULL,
-    "playerId" INTEGER NOT NULL,
-    "endurance" INTEGER,
-    "technique" INTEGER,
-    "attitude" INTEGER,
-    "notes" TEXT,
+    "generalObservations" TEXT,
+    "rating" INTEGER NOT NULL,
+    "coachId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "training_results_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "player_training_results" (
+    "id" SERIAL NOT NULL,
+    "trainingId" INTEGER NOT NULL,
+    "playerId" INTEGER NOT NULL,
+    "endurance" TEXT NOT NULL,
+    "technique" TEXT NOT NULL,
+    "attitude" TEXT NOT NULL,
+    "observations" TEXT,
+    "rating" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "player_training_results_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -102,7 +118,6 @@ CREATE TABLE "messages" (
     "type" "MessageType" NOT NULL DEFAULT 'GENERAL',
     "senderId" INTEGER NOT NULL,
     "receiverId" INTEGER,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "messages_pkey" PRIMARY KEY ("id")
 );
@@ -143,7 +158,10 @@ CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
 CREATE UNIQUE INDEX "training_participants_trainingId_playerId_key" ON "training_participants"("trainingId", "playerId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "training_results_trainingId_playerId_key" ON "training_results"("trainingId", "playerId");
+CREATE UNIQUE INDEX "training_results_trainingId_key" ON "training_results"("trainingId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "player_training_results_trainingId_playerId_key" ON "player_training_results"("trainingId", "playerId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "player_stats_playerId_year_month_key" ON "player_stats"("playerId", "year", "month");
@@ -158,10 +176,16 @@ ALTER TABLE "training_participants" ADD CONSTRAINT "training_participants_traini
 ALTER TABLE "training_participants" ADD CONSTRAINT "training_participants_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "training_results" ADD CONSTRAINT "training_results_trainingId_fkey" FOREIGN KEY ("trainingId") REFERENCES "trainings"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "training_results" ADD CONSTRAINT "training_results_trainingId_fkey" FOREIGN KEY ("trainingId") REFERENCES "trainings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "training_results" ADD CONSTRAINT "training_results_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "training_results" ADD CONSTRAINT "training_results_coachId_fkey" FOREIGN KEY ("coachId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "player_training_results" ADD CONSTRAINT "player_training_results_trainingId_fkey" FOREIGN KEY ("trainingId") REFERENCES "trainings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "player_training_results" ADD CONSTRAINT "player_training_results_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "events" ADD CONSTRAINT "events_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

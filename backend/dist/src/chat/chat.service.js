@@ -16,9 +16,9 @@ let ChatService = class ChatService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getGeneralMessages() {
+    async getMessages() {
         return this.prisma.message.findMany({
-            where: { type: 'GENERAL' },
+            orderBy: { id: 'asc' },
             include: {
                 sender: {
                     select: {
@@ -28,43 +28,36 @@ let ChatService = class ChatService {
                         role: true,
                     },
                 },
+                receiver: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        role: true,
+                    },
+                },
             },
-            orderBy: { createdAt: 'asc' },
         });
     }
     async getPrivateMessages(userId, receiverId) {
         return this.prisma.message.findMany({
             where: {
                 OR: [
-                    {
-                        senderId: userId,
-                        receiverId: receiverId,
-                        type: 'PRIVADO',
-                    },
-                    {
-                        senderId: receiverId,
-                        receiverId: userId,
-                        type: 'PRIVADO',
-                    },
+                    { senderId: userId, receiverId: receiverId },
+                    { senderId: receiverId, receiverId: userId },
                 ],
             },
+            orderBy: { id: 'asc' },
             include: {
                 sender: {
                     select: {
                         id: true,
                         firstName: true,
                         lastName: true,
+                        role: true,
                     },
                 },
-            },
-            orderBy: { createdAt: 'asc' },
-        });
-    }
-    async sendMessage(messageData) {
-        return this.prisma.message.create({
-            data: messageData,
-            include: {
-                sender: {
+                receiver: {
                     select: {
                         id: true,
                         firstName: true,
@@ -75,14 +68,31 @@ let ChatService = class ChatService {
             },
         });
     }
-    async getOnlineUsers() {
-        return this.prisma.user.findMany({
-            where: { isActive: true },
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                role: true,
+    async sendMessage(senderId, content, receiverId) {
+        return this.prisma.message.create({
+            data: {
+                content,
+                senderId,
+                receiverId,
+                type: receiverId ? 'PRIVADO' : 'GENERAL',
+            },
+            include: {
+                sender: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        role: true,
+                    },
+                },
+                receiver: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        role: true,
+                    },
+                },
             },
         });
     }
