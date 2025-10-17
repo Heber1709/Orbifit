@@ -92,6 +92,7 @@ export declare class CoachController {
     saveTrainingResults(req: any, resultsData: any): Promise<{
         success: boolean;
         message: string;
+        trainingId: any;
     }>;
     getTrainingResults(req: any, trainingId: number): Promise<{
         trainingId: number;
@@ -118,6 +119,7 @@ export declare class CoachController {
     updateTrainingResults(req: any, trainingId: number, resultsData: any): Promise<{
         success: boolean;
         message: string;
+        trainingId: any;
     }>;
     deleteTrainingResults(req: any, trainingId: number): Promise<{
         success: boolean;
@@ -131,6 +133,7 @@ export declare class CoachController {
             type: import(".prisma/client").$Enums.TrainingType;
             date: Date;
         };
+        players: any;
         playerResults: ({
             player: {
                 firstName: string;

@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { TrainingService, TrainingResults, PlayerResult } from '../../services/training.service';
 
-// Tipos e interfaces
 type ViewType = 'welcome' | 'profile' | 'schedule' | 'record' | 'teamstats';
 
 interface CoachProfile {
@@ -39,6 +38,10 @@ interface TeamStats {
   trainings: number;
   matchesPlayed: number;
   wins: number;
+  playerPerformance: any[];
+  trainingTypes: any[];
+  totalTrainingTime: number;
+  averageRating: number;
 }
 
 interface CalendarDay {
@@ -98,7 +101,11 @@ export class CoachDashboardComponent implements OnInit {
     activePlayers: 0,
     trainings: 0,
     matchesPlayed: 0,
-    wins: 0
+    wins: 0,
+    playerPerformance: [],
+    trainingTypes: [],
+    totalTrainingTime: 0,
+    averageRating: 0
   };
 
   allPlayersSelected: boolean = true;
@@ -107,7 +114,6 @@ export class CoachDashboardComponent implements OnInit {
   editingTrainingId: number | null = null;
   isEditMode: boolean = false;
 
-  // Propiedades para registrar resultados
   selectedTrainingForResults: any = null;
   trainingResults: TrainingResults = {
     trainingId: 0,
@@ -119,7 +125,6 @@ export class CoachDashboardComponent implements OnInit {
   savedResults: any[] = [];
   showSavedResults: boolean = false;
 
-  // Propiedad para próximo evento
   nextEvent: any = null;
 
   constructor(
@@ -195,34 +200,144 @@ export class CoachDashboardComponent implements OnInit {
   loadTeamStats() {
     this.trainingService.getTeamStats().subscribe({
       next: (stats) => {
-        this.teamStats = stats;
+        this.teamStats = {
+          ...stats,
+          ...this.calculateAdvancedStats()
+        };
       },
       error: (error) => {
         console.error('Error cargando estadísticas:', error);
+        this.teamStats = {
+          activePlayers: 0,
+          trainings: 0,
+          matchesPlayed: 0,
+          wins: 0,
+          playerPerformance: [],
+          trainingTypes: [],
+          totalTrainingTime: 0,
+          averageRating: 0
+        };
       }
     });
   }
 
-  loadTrainingsFromDatabase() {
-    this.loading = true;
-    console.log('📅 Cargando entrenamientos reales desde la BD...');
-    
-    this.trainingService.getCoachTrainings().subscribe({
-      next: (trainings: any[]) => {
-        console.log('✅ Entrenamientos cargados:', trainings);
-        this.processTrainingsForCalendar(trainings);
-        this.loading = false;
-        this.generateCalendar();
-        this.updateNextEvent();
-      },
-      error: (error) => {
-        console.error('❌ Error cargando entrenamientos:', error);
-        this.loading = false;
-        this.generateCalendar();
+  calculateAdvancedStats() {
+    const trainingTypes: any = {};
+    let totalTrainingTime = 0;
+    let totalRating = 0;
+    let ratingCount = 0;
+
+    this.availableTrainings.forEach(training => {
+      const type = this.reverseMapTrainingType(training.type);
+      trainingTypes[type] = (trainingTypes[type] || 0) + 1;
+      totalTrainingTime += training.duration || 0;
+    });
+
+    this.savedResults.forEach(result => {
+      if (result.rating) {
+        totalRating += result.rating;
+        ratingCount++;
       }
     });
+
+    const playerPerformance = this.calculatePlayerPerformance();
+
+    return {
+      playerPerformance,
+      trainingTypes: Object.keys(trainingTypes).map(type => ({
+        type,
+        count: trainingTypes[type],
+        percentage: Math.round((trainingTypes[type] / this.availableTrainings.length) * 100)
+      })),
+      totalTrainingTime,
+      averageRating: ratingCount > 0 ? Math.round((totalRating / ratingCount) * 10) / 10 : 0
+    };
   }
 
+  calculatePlayerPerformance() {
+    const playerStats: any = {};
+
+    this.savedResults.forEach(result => {
+      if (result.players) {
+        Object.keys(result.players).forEach(playerName => {
+          if (!playerStats[playerName]) {
+            playerStats[playerName] = {
+              name: playerName,
+              totalScore: 0,
+              evaluations: 0,
+              position: this.getPlayerPosition(playerName)
+            };
+          }
+
+          const playerResult = result.players[playerName];
+          const score = this.calculatePlayerScore(playerResult);
+          playerStats[playerName].totalScore += score;
+          playerStats[playerName].evaluations++;
+        });
+      }
+    });
+
+    return Object.values(playerStats)
+      .map((player: any) => ({
+        ...player,
+        performance: player.evaluations > 0 ? Math.round((player.totalScore / player.evaluations) * 10) / 10 : 0,
+        trend: 'up'
+      }))
+      .sort((a: any, b: any) => b.performance - a.performance)
+      .slice(0, 5);
+  }
+
+  calculatePlayerScore(playerResult: PlayerResult): number {
+    let score = 0;
+    const ratingValues: { [key: string]: number } = {
+      'excellent': 5,
+      'good': 4,
+      'regular': 3,
+      'needs_improvement': 2
+    };
+
+    if (playerResult.endurance) score += ratingValues[playerResult.endurance] || 3;
+    if (playerResult.technique) score += ratingValues[playerResult.technique] || 3;
+    if (playerResult.attitude) score += ratingValues[playerResult.attitude] || 3;
+
+    return score / 3;
+  }
+
+ loadTrainingsFromDatabase() {
+  this.loading = true;
+  
+  this.trainingService.getCoachTrainings().subscribe({
+    next: (trainings: any[]) => {
+      console.log('✅ Entrenamientos cargados:', trainings);
+      this.availableTrainings = trainings; // ← ESTA LÍNEA ES IMPORTANTE
+      this.processTrainingsForCalendar(trainings);
+      this.loading = false;
+      this.generateCalendar();
+      this.updateNextEvent();
+      this.loadTeamStats();
+    },
+    error: (error) => {
+      console.error('❌ Error cargando entrenamientos:', error);
+      this.loading = false;
+      this.generateCalendar();
+    }
+  });
+}
+
+// Agrega este método en tu componente
+testResults() {
+  console.log('🧪 TEST: Verificando estado de resultados...');
+  console.log('📊 savedResults:', this.savedResults);
+  console.log('📊 savedResults length:', this.savedResults.length);
+  console.log('📊 savedResults detalles:', this.savedResults.map((r: any) => ({
+    trainingId: r.trainingId,
+    playersCount: r.players ? Object.keys(r.players).length : 0,
+    rating: r.rating
+  })));
+  
+  // Forzar recarga desde backend
+  this.loadSavedResults();
+}
   processTrainingsForCalendar(trainings: any[]) {
     this.calendarEvents = {};
 
@@ -274,7 +389,6 @@ export class CoachDashboardComponent implements OnInit {
     });
 
     this.nextEvent = nextEvent;
-    console.log('📅 Próximo evento:', this.nextEvent);
   }
 
   formatDate(date: Date): string {
@@ -304,6 +418,7 @@ export class CoachDashboardComponent implements OnInit {
 
   showTeamStats() {
     this.currentView = 'teamstats';
+    this.loadTeamStats();
   }
 
   toggleCalendar() {
@@ -360,89 +475,66 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   createTraining() {
-    const selectedPlayers = this.teamPlayers
-      .filter(player => player.selected)
-      .map(player => player.id);
-    
-    if (!this.newTraining.date || !this.newTraining.time) {
-      alert('Por favor completa la fecha y hora del entrenamiento');
-      return;
-    }
-
-    if (selectedPlayers.length === 0) {
-      alert('Selecciona al menos un jugador para el entrenamiento');
-      return;
-    }
-
-    const trainingData = {
-      title: `${this.newTraining.type} - ${this.newTraining.date}`,
-      description: this.newTraining.description,
-      type: this.mapTrainingType(this.newTraining.type),
-      date: new Date(`${this.newTraining.date}T${this.newTraining.time}`).toISOString(),
-      duration: parseInt(this.newTraining.duration.toString()),
-      playerIds: selectedPlayers,
-      coachId: this.currentUser.id
-    };
-
-    this.loading = true;
-
-    if (this.isEditMode && this.editingTrainingId) {
-      this.trainingService.updateTraining(this.editingTrainingId, trainingData).subscribe({
-        next: (response) => {
-          this.loading = false;
-          console.log('✅ Entrenamiento actualizado:', response);
-          this.loadTrainingsFromDatabase();
-          alert('¡Entrenamiento actualizado exitosamente!');
-          this.showWelcome();
-        },
-        error: (error) => {
-          this.loading = false;
-          console.error('❌ Error actualizando entrenamiento:', error);
-          alert('Error al actualizar el entrenamiento: ' + error.message);
-        }
-      });
-    } else {
-      this.trainingService.createTraining(trainingData).subscribe({
-        next: (response) => {
-          this.loading = false;
-          console.log('✅ Entrenamiento creado:', response);
-          this.loadTrainingsFromDatabase();
-          alert('¡Entrenamiento programado exitosamente!');
-          this.showWelcome();
-        },
-        error: (error) => {
-          this.loading = false;
-          console.error('❌ Error creando entrenamiento:', error);
-          alert('Error al programar el entrenamiento: ' + error.message);
-        }
-      });
-    }
+  const selectedPlayers = this.teamPlayers
+    .filter(player => player.selected)
+    .map(player => player.id);
+  
+  if (!this.newTraining.date || !this.newTraining.time) {
+    alert('Por favor completa la fecha y hora del entrenamiento');
+    return;
   }
 
-  addTrainingToCalendar(training: any) {
-    const trainingDate = new Date(training.date);
-    const dateStr = this.formatDate(trainingDate);
-    const timeStr = trainingDate.toLocaleTimeString('es-ES', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+  if (selectedPlayers.length === 0) {
+    alert('Selecciona al menos un jugador para el entrenamiento');
+    return;
+  }
+
+  const trainingData = {
+    title: `${this.newTraining.type} - ${this.newTraining.date}`,
+    description: this.newTraining.description,
+    type: this.mapTrainingType(this.newTraining.type),
+    date: new Date(`${this.newTraining.date}T${this.newTraining.time}`).toISOString(),
+    duration: parseInt(this.newTraining.duration.toString()),
+    playerIds: selectedPlayers,
+    coachId: this.currentUser.id
+  };
+
+  this.loading = true;
+
+  if (this.isEditMode && this.editingTrainingId) {
+    this.trainingService.updateTraining(this.editingTrainingId, trainingData).subscribe({
+      next: (response) => {
+        this.loading = false;
+        console.log('✅ Entrenamiento actualizado:', response);
+        this.loadTrainingsFromDatabase(); // ← Esto actualiza todo
+        this.loadAvailableTrainings(); // ← Esto actualiza la lista de entrenamientos disponibles
+        alert('¡Entrenamiento actualizado exitosamente!');
+        this.showWelcome();
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('❌ Error actualizando entrenamiento:', error);
+        alert('Error al actualizar el entrenamiento: ' + error.message);
+      }
     });
-
-    const calendarEvent: CalendarEvent = {
-      id: training.id,
-      title: training.title,
-      time: timeStr,
-      type: training.type,
-      description: training.description
-    };
-
-    if (!this.calendarEvents[dateStr]) {
-      this.calendarEvents[dateStr] = [];
-    }
-
-    this.calendarEvents[dateStr].push(calendarEvent);
-    this.generateCalendar();
-    this.updateNextEvent();
+  } else {
+    this.trainingService.createTraining(trainingData).subscribe({
+      next: (response) => {
+        this.loading = false;
+        console.log('✅ Entrenamiento creado:', response);
+        this.loadTrainingsFromDatabase(); // ← Esto actualiza todo
+        this.loadAvailableTrainings(); // ← Esto actualiza la lista de entrenamientos disponibles
+        alert('¡Entrenamiento programado exitosamente!');
+        this.showWelcome();
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('❌ Error creando entrenamiento:', error);
+        alert('Error al programar el entrenamiento: ' + error.message);
+      }
+    });
   }
+}
 
   private mapTrainingType(frontendType: string): string {
     const typeMap: { [key: string]: string } = {
@@ -510,22 +602,6 @@ export class CoachDashboardComponent implements OnInit {
           }
         });
       }
-    }
-  }
-
-  removeTrainingFromCalendar(event: CalendarEvent, index: number) {
-    if (!this.selectedDate) return;
-    
-    const dateStr = this.formatDate(this.selectedDate);
-    if (this.calendarEvents[dateStr]) {
-      this.calendarEvents[dateStr].splice(index, 1);
-      
-      if (this.calendarEvents[dateStr].length === 0) {
-        delete this.calendarEvents[dateStr];
-      }
-      
-      this.generateCalendar();
-      this.updateNextEvent();
     }
   }
 
@@ -683,247 +759,299 @@ export class CoachDashboardComponent implements OnInit {
     }
   }
 
-  // MÉTODOS PARA REGISTRAR RESULTADOS
   loadAvailableTrainings() {
-    this.loading = true;
-    this.trainingService.getCoachTrainings().subscribe({
-      next: (trainings) => {
-        this.availableTrainings = trainings;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error cargando entrenamientos:', error);
-        this.loading = false;
-      }
+  this.loading = true;
+  this.trainingService.getCoachTrainings().subscribe({
+    next: (trainings) => {
+      this.availableTrainings = trainings;
+      this.loading = false;
+      console.log('✅ Entrenamientos disponibles actualizados:', this.availableTrainings.length);
+    },
+    error: (error) => {
+      console.error('Error cargando entrenamientos:', error);
+      this.loading = false;
+    }
+  });
+}
+// ==== MÉTODOS DE RESULTADOS ====
+
+loadSavedResults() {
+  console.log('🔄 Cargando resultados guardados...');
+  
+  this.trainingService.getAllTrainingResults().subscribe({
+    next: (results) => {
+      console.log('✅ Resultados recibidos:', results);
+      this.savedResults = Array.isArray(results) ? results : [];
+      console.log(`💾 ${this.savedResults.length} resultados cargados`);
+    },
+    error: (error) => {
+      console.error('❌ Error cargando resultados:', error);
+      this.savedResults = [];
+    }
+  });
+}
+
+selectTrainingForResults(training: any) {
+  console.log('🎯 Seleccionando entrenamiento para resultados:', training.id);
+  
+  this.selectedTrainingForResults = training;
+  this.trainingResults.trainingId = training.id;
+  
+  this.initializePlayerResults(training);
+  this.loadExistingResults(training.id);
+}
+
+initializePlayerResults(training: any) {
+  console.log('👥 Inicializando jugadores del entrenamiento');
+  
+  this.trainingResults.players = {};
+
+  if (training.participants && training.participants.length > 0) {
+    training.participants.forEach((participant: any) => {
+      const playerName = `${participant.player.firstName} ${participant.player.lastName}`;
+      this.trainingResults.players[playerName] = {
+        endurance: 'good',
+        technique: 'good', 
+        attitude: 'good',
+        observations: ''
+      };
     });
   }
+  
+  console.log(`✅ ${Object.keys(this.trainingResults.players).length} jugadores inicializados`);
+}
 
-  loadSavedResults() {
-    this.trainingService.getAllTrainingResults().subscribe({
-      next: (results) => {
-        console.log('📋 Resultados recibidos del backend:', results);
-        this.savedResults = results;
-      },
-      error: (error) => {
-        console.error('Error cargando resultados guardados:', error);
-        this.savedResults = [];
-      }
-    });
-  }
-
-  showSavedResultsList() {
-    this.showSavedResults = true;
-  }
-
-  hideSavedResultsList() {
-    this.showSavedResults = false;
-  }
-
-  selectTrainingForResults(training: any) {
-    this.selectedTrainingForResults = training;
-    this.trainingResults.trainingId = training.id;
-    
-    this.loadExistingResults(training.id);
-    this.initializePlayerResults(training);
-  }
-
-  loadExistingResults(trainingId: number) {
-    this.trainingService.getTrainingResults(trainingId).subscribe({
-      next: (results) => {
-        if (results && results.playerResults) {
-          this.trainingResults.generalObservations = results.generalObservations || '';
-          this.trainingResults.rating = results.rating || 0;
-          
-          results.playerResults.forEach((playerResult: any) => {
-            const playerName = `${playerResult.player.firstName} ${playerResult.player.lastName}`;
+loadExistingResults(trainingId: number) {
+  console.log('📥 Cargando resultados existentes para:', trainingId);
+  
+  this.trainingService.getTrainingResults(trainingId).subscribe({
+    next: (results) => {
+      if (results && results.players) {
+        console.log('✅ Resultados existentes encontrados');
+        
+        Object.keys(results.players).forEach(playerName => {
+          if (this.trainingResults.players[playerName]) {
             this.trainingResults.players[playerName] = {
-              endurance: playerResult.endurance || 'good',
-              technique: playerResult.technique || 'good',
-              attitude: playerResult.attitude || 'good',
-              observations: playerResult.observations || ''
+              ...this.trainingResults.players[playerName],
+              ...results.players[playerName]
             };
-          });
-        }
-      },
-      error: (error) => {
-        console.log('No hay resultados previos o error cargando:', error);
-      }
-    });
-  }
-
-  initializePlayerResults(training: any) {
-    this.trainingResults.players = {};
-
-    if (training.participants && training.participants.length > 0) {
-      training.participants.forEach((participant: any) => {
-        const playerName = `${participant.player.firstName} ${participant.player.lastName}`;
-        this.trainingResults.players[playerName] = {
-          endurance: 'good',
-          technique: 'good', 
-          attitude: 'good',
-          observations: ''
-        };
-      });
-    }
-  }
-
-  setPlayerRating(playerName: string, category: keyof PlayerResult, value: string) {
-    if (!this.trainingResults.players[playerName]) {
-      this.trainingResults.players[playerName] = {
-        endurance: 'good',
-        technique: 'good',
-        attitude: 'good',
-        observations: ''
-      };
-    }
-    this.trainingResults.players[playerName][category] = value;
-  }
-
-  setTrainingRating(rating: number) {
-    this.trainingResults.rating = rating;
-  }
-
-  saveTrainingResults() {
-    if (!this.selectedTrainingForResults) {
-      alert('Por favor selecciona un entrenamiento primero');
-      return;
-    }
-
-    this.loading = true;
-    this.trainingService.saveTrainingResults(this.trainingResults).subscribe({
-      next: (response) => {
-        this.loading = false;
-        console.log('✅ Resultados guardados:', response);
-        alert('¡Resultados guardados exitosamente!');
-        this.loadSavedResults();
-        this.showWelcome();
-      },
-      error: (error) => {
-        this.loading = false;
-        console.error('❌ Error guardando resultados:', error);
-        alert('Error al guardar los resultados: ' + error.message);
-      }
-    });
-  }
-
-  updateTrainingResults() {
-    if (!this.selectedTrainingForResults) {
-      alert('Por favor selecciona un entrenamiento primero');
-      return;
-    }
-
-    this.loading = true;
-    this.trainingService.updateTrainingResults(this.trainingResults.trainingId, this.trainingResults).subscribe({
-      next: (response) => {
-        this.loading = false;
-        console.log('✅ Resultados actualizados:', response);
-        alert('¡Resultados actualizados exitosamente!');
-        this.loadSavedResults();
-        this.showWelcome();
-      },
-      error: (error) => {
-        this.loading = false;
-        console.error('❌ Error actualizando resultados:', error);
-        alert('Error al actualizar los resultados: ' + error.message);
-      }
-    });
-  }
-
-  deleteTrainingResults(trainingId: number) {
-    if (confirm('¿Estás seguro de que quieres eliminar estos resultados? Esta acción no se puede deshacer.')) {
-      this.loading = true;
-      this.trainingService.deleteTrainingResults(trainingId).subscribe({
-        next: (response) => {
-          this.loading = false;
-          console.log('✅ Resultados eliminados:', response);
-          
-          this.savedResults = this.savedResults.filter(result => result.trainingId !== trainingId);
-          
-          if (this.trainingResults.trainingId === trainingId) {
-            this.clearResultsForm();
           }
-          
-          alert('¡Resultados eliminados exitosamente!');
-        },
-        error: (error) => {
-          this.loading = false;
-          console.error('❌ Error eliminando resultados:', error);
-          alert('Error al eliminar los resultados: ' + error.message);
-        }
-      });
+        });
+        
+        this.trainingResults.generalObservations = results.generalObservations || '';
+        this.trainingResults.rating = results.rating || 0;
+      } else {
+        console.log('ℹ️ No hay resultados previos');
+      }
+    },
+    error: (error) => {
+      console.log('ℹ️ No hay resultados previos o error:', error);
     }
+  });
+}
+
+saveTrainingResults() {
+  if (!this.selectedTrainingForResults) {
+    alert('Por favor selecciona un entrenamiento primero');
+    return;
   }
 
-  editSavedResults(result: any) {
-    const training = this.availableTrainings.find(t => t.id === result.trainingId);
-    if (training) {
-      this.selectTrainingForResults(training);
-      this.hideSavedResultsList();
-    } else {
-      alert('No se encontró el entrenamiento asociado a estos resultados');
+  console.log('💾 Guardando resultados...');
+
+  this.loading = true;
+  this.trainingService.saveTrainingResults(this.trainingResults).subscribe({
+    next: (response) => {
+      this.loading = false;
+      console.log('✅ Resultados guardados:', response);
+      alert('¡Resultados guardados exitosamente!');
+      
+      this.loadSavedResults();
+      this.clearResultsForm();
+      this.showWelcome();
+    },
+    error: (error) => {
+      this.loading = false;
+      console.error('❌ Error guardando resultados:', error);
+      alert('Error al guardar los resultados: ' + error.message);
     }
+  });
+}
+
+updateTrainingResults() {
+  if (!this.selectedTrainingForResults) {
+    alert('Por favor selecciona un entrenamiento primero');
+    return;
   }
 
-  clearResultsForm() {
-    this.selectedTrainingForResults = null;
-    this.trainingResults = {
-      trainingId: 0,
-      players: {},
-      generalObservations: '',
-      rating: 0
+  console.log('🔄 Actualizando resultados...');
+
+  this.loading = true;
+  this.trainingService.updateTrainingResults(this.trainingResults.trainingId, this.trainingResults).subscribe({
+    next: (response) => {
+      this.loading = false;
+      console.log('✅ Resultados actualizados:', response);
+      alert('¡Resultados actualizados exitosamente!');
+      
+      this.loadSavedResults();
+      this.clearResultsForm();
+      this.showWelcome();
+    },
+    error: (error) => {
+      this.loading = false;
+      console.error('❌ Error actualizando resultados:', error);
+      alert('Error al actualizar los resultados: ' + error.message);
+    }
+  });
+}
+
+deleteTrainingResults(trainingId: number) {
+  if (confirm('¿Estás seguro de que quieres eliminar estos resultados?')) {
+    console.log('🗑️ Eliminando resultados:', trainingId);
+    
+    this.loading = true;
+    this.trainingService.deleteTrainingResults(trainingId).subscribe({
+      next: (response) => {
+        this.loading = false;
+        console.log('✅ Resultados eliminados:', response);
+        
+        this.savedResults = this.savedResults.filter(result => result.trainingId !== trainingId);
+        alert('¡Resultados eliminados exitosamente!');
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('❌ Error eliminando resultados:', error);
+        alert('Error al eliminar los resultados: ' + error.message);
+      }
+    });
+  }
+}
+// ==== MÉTODOS FALTANTES PARA EL TEMPLATE ====
+
+showSavedResultsList() {
+  this.showSavedResults = true;
+}
+
+hideSavedResultsList() {
+  this.showSavedResults = false;
+}
+
+editSavedResults(result: any) {
+  const training = this.availableTrainings.find(t => t.id === result.trainingId);
+  if (training) {
+    this.selectTrainingForResults(training);
+    this.hideSavedResultsList();
+  } else {
+    alert('No se encontró el entrenamiento asociado a estos resultados');
+  }
+}
+
+getPlayerNames(): string[] {
+  return Object.keys(this.trainingResults.players);
+}
+
+getPlayerPosition(playerName: string): string {
+  const player = this.teamPlayers.find(p => p.name === playerName);
+  return player?.position || 'Sin posición';
+}
+
+getRatingButtonClass(rating: number): string {
+  if (rating <= this.trainingResults.rating) {
+    const colorClasses = {
+      1: 'bg-red-500 hover:bg-red-600',
+      2: 'bg-orange-500 hover:bg-orange-600', 
+      3: 'bg-yellow-500 hover:bg-yellow-600',
+      4: 'bg-green-500 hover:bg-green-600',
+      5: 'bg-blue-500 hover:bg-blue-600'
     };
-    this.showSavedResults = false;
+    return colorClasses[rating as keyof typeof colorClasses] || 'bg-gray-500';
+  }
+  return 'bg-gray-300 text-gray-600 hover:bg-gray-400';
+}
+
+clearResultsForm() {
+  this.selectedTrainingForResults = null;
+  this.trainingResults = {
+    trainingId: 0,
+    players: {},
+    generalObservations: '',
+    rating: 0
+  };
+  this.showSavedResults = false;
+}
+
+hasExistingResults(): boolean {
+  return this.savedResults.some(result => result.trainingId === this.trainingResults.trainingId);
+}
+
+getTrainingTitle(trainingId: number): string {
+  const training = this.availableTrainings.find(t => t.id === trainingId);
+  return training?.title || `Entrenamiento #${trainingId}`;
+}
+
+setPlayerRating(playerName: string, category: keyof PlayerResult, value: string) {
+  if (!this.trainingResults.players[playerName]) {
+    this.trainingResults.players[playerName] = {
+      endurance: 'good',
+      technique: 'good',
+      attitude: 'good',
+      observations: ''
+    };
+  }
+  this.trainingResults.players[playerName][category] = value;
+}
+
+setTrainingRating(rating: number) {
+  this.trainingResults.rating = rating;
+}
+
+onPlayerRatingChange(playerName: string, category: keyof PlayerResult, event: Event) {
+  const target = event.target as HTMLSelectElement;
+  this.setPlayerRating(playerName, category, target.value);
+}
+
+onPlayerObservationsChange(playerName: string, event: Event) {
+  const target = event.target as HTMLTextAreaElement;
+  if (!this.trainingResults.players[playerName]) {
+    this.trainingResults.players[playerName] = {
+      endurance: 'good',
+      technique: 'good',
+      attitude: 'good',
+      observations: ''
+    };
+  }
+  this.trainingResults.players[playerName].observations = target.value;
+}
+
+
+
+  getPerformanceColor(performance: number): string {
+    if (performance >= 4.5) return 'text-green-600';
+    if (performance >= 4.0) return 'text-green-500';
+    if (performance >= 3.5) return 'text-yellow-500';
+    if (performance >= 3.0) return 'text-orange-500';
+    return 'text-red-500';
   }
 
-  // MÉTODOS AUXILIARES PARA EL TEMPLATE
-  getPlayerNames(): string[] {
-    return Object.keys(this.trainingResults.players);
+  getTrendIcon(trend: string): string {
+    return trend === 'up' ? '📈' : '📉';
   }
 
-  getPlayerPosition(playerName: string): string {
-    const player = this.teamPlayers.find(p => p.name === playerName);
-    return player?.position || 'Sin posición';
+  getPerformanceClass(performance: number): string {
+    const level = Math.floor(performance * 20);
+    const roundedLevel = Math.floor(level / 10) * 10;
+    return `performance-${roundedLevel}`;
   }
 
-  getRatingButtonClass(rating: number): string {
-    if (rating <= this.trainingResults.rating) {
-      const colorClasses = {
-        1: 'bg-red-500 hover:bg-red-600',
-        2: 'bg-orange-500 hover:bg-orange-600', 
-        3: 'bg-yellow-500 hover:bg-yellow-600',
-        4: 'bg-green-500 hover:bg-green-600',
-        5: 'bg-blue-500 hover:bg-blue-600'
-      };
-      return colorClasses[rating as keyof typeof colorClasses] || 'bg-gray-500';
-    }
-    return 'bg-gray-300 text-gray-600 hover:bg-gray-400';
+  getPerformanceWidth(performance: number): number {
+    return (performance / 5) * 100;
   }
 
-  onPlayerRatingChange(playerName: string, category: keyof PlayerResult, event: Event) {
-    const target = event.target as HTMLSelectElement;
-    this.setPlayerRating(playerName, category, target.value);
-  }
-
-  onPlayerObservationsChange(playerName: string, event: Event) {
-    const target = event.target as HTMLTextAreaElement;
-    if (!this.trainingResults.players[playerName]) {
-      this.trainingResults.players[playerName] = {
-        endurance: 'good',
-        technique: 'good',
-        attitude: 'good',
-        observations: ''
-      };
-    }
-    this.trainingResults.players[playerName].observations = target.value;
-  }
-
-  hasExistingResults(): boolean {
-    return this.savedResults.some(result => result.trainingId === this.trainingResults.trainingId);
-  }
-
-  getTrainingTitle(trainingId: number): string {
-    const training = this.availableTrainings.find(t => t.id === trainingId);
-    return training?.title || `Entrenamiento #${trainingId}`;
+  getRatingPercentage(rating: number): number {
+    if (this.savedResults.length === 0) return 0;
+    
+    const ratings = this.savedResults.map(result => result.rating || 0);
+    const count = ratings.filter(r => Math.round(r) === rating).length;
+    return Math.round((count / ratings.length) * 100);
   }
 
   formatEventDate(dateStr: string, timeStr: string): string {

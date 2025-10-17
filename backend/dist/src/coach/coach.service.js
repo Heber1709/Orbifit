@@ -184,25 +184,21 @@ let CoachService = class CoachService {
     }
     async saveTrainingResults(coachId, resultsData) {
         console.log('💾 SERVICE: Guardando resultados de entrenamiento');
-        console.log('📊 Datos:', resultsData);
+        console.log('📊 Datos recibidos:', resultsData);
         const { trainingId, players, generalObservations, rating } = resultsData;
         const training = await this.prisma.training.findFirst({
             where: {
                 id: parseInt(trainingId.toString()),
                 coachId: coachId
-            },
-            include: {
-                participants: {
-                    include: {
-                        player: true
-                    }
-                }
             }
         });
         if (!training) {
             throw new Error('Entrenamiento no encontrado o no autorizado');
         }
         try {
+            await this.prisma.trainingResult.deleteMany({
+                where: { trainingId: parseInt(trainingId.toString()) }
+            });
             for (const [playerName, playerData] of Object.entries(players)) {
                 const nameParts = playerName.split(' ');
                 const firstName = nameParts[0];
@@ -216,20 +212,8 @@ let CoachService = class CoachService {
                 });
                 if (player) {
                     const playerResultData = playerData;
-                    await this.prisma.trainingResult.upsert({
-                        where: {
-                            trainingId_playerId: {
-                                trainingId: parseInt(trainingId.toString()),
-                                playerId: player.id
-                            }
-                        },
-                        update: {
-                            endurance: this.mapRatingToNumber(playerResultData.endurance),
-                            technique: this.mapRatingToNumber(playerResultData.technique),
-                            attitude: this.mapRatingToNumber(playerResultData.attitude),
-                            notes: playerResultData.observations || '',
-                        },
-                        create: {
+                    await this.prisma.trainingResult.create({
+                        data: {
                             trainingId: parseInt(trainingId.toString()),
                             playerId: player.id,
                             endurance: this.mapRatingToNumber(playerResultData.endurance),
@@ -243,7 +227,8 @@ let CoachService = class CoachService {
             console.log('✅ SERVICE: Resultados guardados exitosamente');
             return {
                 success: true,
-                message: 'Resultados guardados correctamente'
+                message: 'Resultados guardados correctamente',
+                trainingId: trainingId
             };
         }
         catch (error) {
@@ -286,11 +271,14 @@ let CoachService = class CoachService {
                     observations: result.notes || ''
                 };
             });
+            const ratings = trainingResults.map(result => (result.endurance + result.technique + result.attitude) / 3);
+            const averageRating = ratings.length > 0 ?
+                Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : 0;
             return {
                 trainingId,
                 players,
                 generalObservations: '',
-                rating: 0,
+                rating: averageRating,
                 playerResults: trainingResults
             };
         }
@@ -355,12 +343,26 @@ let CoachService = class CoachService {
                         }
                     }
                 });
+                const players = {};
+                trainingResults.forEach(result => {
+                    const playerName = `${result.player.firstName} ${result.player.lastName}`;
+                    players[playerName] = {
+                        endurance: this.mapNumberToRating(result.endurance),
+                        technique: this.mapNumberToRating(result.technique),
+                        attitude: this.mapNumberToRating(result.attitude),
+                        observations: result.notes || ''
+                    };
+                });
+                const ratings = trainingResults.map(result => (result.endurance + result.technique + result.attitude) / 3);
+                const averageRating = ratings.length > 0 ?
+                    Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : 0;
                 return {
                     trainingId: training.id,
                     training: training,
+                    players: players,
                     playerResults: trainingResults,
                     generalObservations: '',
-                    rating: 0,
+                    rating: averageRating,
                     updatedAt: new Date()
                 };
             }));

@@ -15,7 +15,6 @@ export interface TeamStats {
   trainings: number;
   matchesPlayed: number;
   wins: number;
-  topPlayers?: any[];
 }
 
 export interface Training {
@@ -27,15 +26,6 @@ export interface Training {
   duration: number;
   playerIds: number[];
   coachId: number;
-}
-
-export interface CalendarEvent {
-  id?: number;
-  title: string;
-  time: string;
-  type: string;
-  description?: string;
-  originalTraining?: any;
 }
 
 export interface PlayerResult {
@@ -68,7 +58,7 @@ export class TrainingService {
     };
   }
 
-  // ✅ RUTAS CORREGIDAS - todas empiezan con /coach/
+  // ENTRENAMIENTOS
   createTraining(trainingData: Training): Observable<any> {
     return this.http.post(`${this.apiUrl}/coach/trainings`, trainingData, {
       headers: this.getHeaders()
@@ -81,17 +71,13 @@ export class TrainingService {
     });
   }
 
-  // ✅ CORREGIDO: usa /coach/trainings/ en lugar de /trainings/
   updateTraining(trainingId: number, trainingData: any): Observable<any> {
-    console.log('🔄 Enviando PUT a:', `${this.apiUrl}/coach/trainings/${trainingId}`);
     return this.http.put(`${this.apiUrl}/coach/trainings/${trainingId}`, trainingData, {
       headers: this.getHeaders()
     });
   }
 
-  // ✅ CORREGIDO: usa /coach/trainings/ en lugar de /trainings/
   deleteTraining(trainingId: number): Observable<any> {
-    console.log('🗑️ Enviando DELETE a:', `${this.apiUrl}/coach/trainings/${trainingId}`);
     return this.http.delete(`${this.apiUrl}/coach/trainings/${trainingId}`, {
       headers: this.getHeaders()
     });
@@ -109,8 +95,9 @@ export class TrainingService {
     });
   }
 
-  // ✅ MÉTODOS NUEVOS PARA RESULTADOS
+  // RESULTADOS
   saveTrainingResults(results: TrainingResults): Observable<any> {
+    console.log('💾 FRONTEND: Enviando resultados al backend');
     return this.http.post(`${this.apiUrl}/coach/training-results`, results, {
       headers: this.getHeaders()
     });
@@ -127,18 +114,19 @@ export class TrainingService {
       headers: this.getHeaders()
     }).pipe(
       catchError(error => {
-        console.error('Error fetching training results:', error);
+        console.log('No hay resultados previos');
         return of(null);
       })
     );
   }
 
   getAllTrainingResults(): Observable<any[]> {
+    console.log('🔄 FRONTEND: Solicitando TODOS los resultados');
     return this.http.get<any[]>(`${this.apiUrl}/coach/training-results`, {
       headers: this.getHeaders()
     }).pipe(
       catchError(error => {
-        console.error('Error fetching all training results:', error);
+        console.error('Error cargando resultados:', error);
         return of([]);
       })
     );
