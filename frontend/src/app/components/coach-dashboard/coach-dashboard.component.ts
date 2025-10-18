@@ -339,31 +339,41 @@ export class CoachDashboardComponent implements OnInit {
     this.calendarEvents = {};
 
     trainings.forEach(training => {
-      const trainingDate = new Date(training.date);
-      const dateStr = this.formatDate(trainingDate);
-      const timeStr = trainingDate.toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
+        // CORRECCIÓN: Usar la fecha directamente sin conversiones que causen desplazamiento
+        const trainingDate = new Date(training.date);
+        
+        // Usar nuestra función corregida para formatear
+        const dateStr = this.formatDateForCalendar(trainingDate);
+        const timeStr = trainingDate.toLocaleTimeString('es-ES', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
 
-      const calendarEvent: CalendarEvent = {
-        id: training.id,
-        title: training.title,
-        time: timeStr,
-        type: training.type,
-        description: training.description,
-        originalTraining: training
-      };
+        const calendarEvent: CalendarEvent = {
+            id: training.id,
+            title: training.title,
+            time: timeStr,
+            type: training.type,
+            description: training.description,
+            originalTraining: training
+        };
 
-      if (!this.calendarEvents[dateStr]) {
-        this.calendarEvents[dateStr] = [];
-      }
+        if (!this.calendarEvents[dateStr]) {
+            this.calendarEvents[dateStr] = [];
+        }
 
-      this.calendarEvents[dateStr].push(calendarEvent);
+        this.calendarEvents[dateStr].push(calendarEvent);
+        
+        console.log('📅 Evento procesado:', {
+            fechaOriginal: training.date,
+            fechaProcesada: dateStr,
+            hora: timeStr,
+            titulo: training.title
+        });
     });
 
     console.log('📊 Eventos del calendario procesados:', this.calendarEvents);
-  }
+}
 
   updateNextEvent() {
     const now = new Date();
@@ -389,8 +399,8 @@ export class CoachDashboardComponent implements OnInit {
   }
 
   formatDate(date: Date): string {
-    return date.toISOString().split('T')[0];
-  }
+    return this.formatDateForCalendar(date);
+}
 
   showWelcome() {
     this.currentView = 'welcome';
@@ -490,15 +500,27 @@ export class CoachDashboardComponent implements OnInit {
       return;
     }
 
+    // CORRECCIÓN: Crear fecha correctamente sin problemas de timezone
+    const localDate = new Date(this.newTraining.date + 'T' + this.newTraining.time);
+    // Ajustar para UTC para evitar el desplazamiento
+    const utcDate = new Date(localDate.getTime() - (localDate.getTimezoneOffset() * 60000));
+
     const trainingData = {
       title: `${this.newTraining.type} - ${this.newTraining.date}`,
       description: this.newTraining.description,
       type: this.mapTrainingType(this.newTraining.type),
-      date: new Date(`${this.newTraining.date}T${this.newTraining.time}`).toISOString(),
+      date: utcDate.toISOString(), // Usar fecha UTC
       duration: parseInt(this.newTraining.duration.toString()),
       playerIds: selectedPlayers,
       coachId: this.currentUser.id
     };
+
+    console.log('📅 Fecha del entrenamiento:', {
+      fechaLocal: this.newTraining.date,
+      hora: this.newTraining.time,
+      fechaUTC: utcDate.toISOString(),
+      fechaParaCalendario: this.formatDateForCalendar(utcDate)
+    });
 
     this.loading = true;
 
@@ -535,7 +557,16 @@ export class CoachDashboardComponent implements OnInit {
         }
       });
     }
-  }
+}
+
+formatDateForCalendar(date: Date): string {
+    // Usar métodos locales para evitar problemas de timezone
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+}
 
   private mapTrainingType(frontendType: string): string {
     const typeMap: { [key: string]: string } = {

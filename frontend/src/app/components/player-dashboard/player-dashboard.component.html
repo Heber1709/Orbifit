@@ -1,7 +1,5 @@
 <!-- ==== AGREGAR ESTO AL PRINCIPIO DEL ARCHIVO ==== -->
 <style>
-
-  
   /* Fuerzar dimensiones exactas */
   .dashboard-container {
     max-width: 1280px;
@@ -27,15 +25,46 @@
       grid-template-columns: repeat(4, 1fr);
     }
   }
+  
+  .dashboard-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+    cursor: pointer;
+    text-align: left;
+    border: none;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .dashboard-card:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .next-match-card {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    min-height: 140px;
+  }
 
-  /* Estilos para el chat igual que el entrenador */
-  /* ==== MEJORAS PARA EL CALENDARIO - IGUAL QUE ENTRENADOR ==== */
-  .calendar-sidebar {
-    width: 24rem !important;
-    background: white !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-    z-index: 1000 !important;
-    overflow-y: auto !important;
+  /* ==== ESTILOS DEL CALENDARIO IGUAL QUE ENTRENADOR ==== */
+  .calendar-header {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    color: white !important;
+    padding: 1rem 1.5rem !important;
+    margin: -1.5rem -1.5rem 1rem -1.5rem !important;
+  }
+
+  .calendar-month {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    margin: 0 !important;
   }
 
   /* Botón de cerrar más pequeño y rojo */
@@ -203,22 +232,7 @@
     color: #92400e !important;
   }
 
-  /* Header del calendario mejorado - MÁS COMPACTO */
-  .calendar-header {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-    color: white !important;
-    padding: 1rem 1.5rem !important;
-    margin: -1.5rem -1.5rem 1rem -1.5rem !important;
-  }
-
-  .calendar-month {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    text-align: center !important;
-    margin: 0 !important;
-  }
-
-  /* Botón flotante más pequeño */
+  /* BOTONES FLOTANTES FIJOS - CORREGIDOS */
   .floating-btn {
     width: 3rem !important;
     height: 3rem !important;
@@ -230,36 +244,116 @@
     z-index: 40 !important;
     border: none !important;
     cursor: pointer !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
     position: fixed !important;
     transition: all 0.3s ease !important;
-  }
+}
+
+.calendar-sidebar.open ~ .floating-btn.calendar-btn {
+    display: none !important;
+}
+
+.chat-sidebar.open ~ .floating-btn.chat-btn {
+    display: none !important;
+}
 
   .floating-btn:hover {
     transform: scale(1.1) !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-  }
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+}
 
   .calendar-btn {
     background: #3b82f6 !important;
     color: white !important;
-    left: 1rem !important;
-    top: 1rem !important;
-  }
+    left: 1.5rem !important;
+    top: 1.5rem !important;  /* CAMBIADO: Ahora está arriba */
+}
 
   .calendar-btn:hover {
     background: #2563eb !important;
-  }
+}
+
 
   .chat-btn {
     background: #10b981 !important;
     color: white !important;
-    right: 1rem !important;
-    bottom: 1rem !important;
+    right: 1.5rem !important;
+    bottom: 1.5rem !important;
+}
+
+.chat-btn:hover {
+    background: #059669 !important;
+}
+
+  /* GRÁFICA DE BARRAS VERTICAL - CORREGIDA */
+  .bars-container {
+    display: flex !important;
+    align-items: end !important;
+    justify-content: space-between !important;
+    height: 160px !important;
+    padding: 1rem 0 !important;
+    gap: 1rem !important;
   }
 
-  .chat-btn:hover {
-    background: #059669 !important;
+  .bar-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    flex: 1 !important;
+    height: 100% !important;
+  }
+
+  .bar-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: end !important;
+    height: 100% !important;
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  .bar {
+    width: 60% !important;
+    min-height: 20px !important;
+    border-radius: 8px 8px 0 0 !important;
+    transition: all 0.8s ease-in-out !important;
+    display: flex !important;
+    align-items: end !important;
+    justify-content: center !important;
+    position: relative !important;
+  }
+
+  .bar-resistance {
+    background: linear-gradient(to top, #10b981, #34d399) !important;
+  }
+
+  .bar-technique {
+    background: linear-gradient(to top, #3b82f6, #60a5fa) !important;
+  }
+
+  .bar-attitude {
+    background: linear-gradient(to top, #f59e0b, #fbbf24) !important;
+  }
+
+  .bar-value {
+    color: white !important;
+    font-weight: bold !important;
+    font-size: 0.75rem !important;
+    margin-bottom: 0.25rem !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
+  }
+
+  .bar-label {
+    margin-top: 0.5rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+  }
+
+  .bar-icon {
+    font-size: 1.5rem !important;
+    margin-top: 0.25rem !important;
   }
 
   .sidebar {
@@ -305,138 +399,6 @@
       opacity: 1; 
       transform: translateY(0); 
     }
-  }
-  
-  .dashboard-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s;
-    cursor: pointer;
-    text-align: left;
-    border: none;
-    min-height: 140px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  
-  .dashboard-card:hover {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-  }
-  
-  .next-match-card {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: white;
-    min-height: 140px;
-  }
-
-  /* Estilos para el calendario funcional */
-  .calendar-day {
-    width: 2rem;
-    height: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    font-size: 0.75rem;
-    font-weight: 500;
-    margin: 0 auto;
-  }
-
-  .calendar-day:hover {
-    background: #3b82f6;
-    color: white;
-    transform: scale(1.05);
-  }
-
-  .calendar-day.today {
-    background: #ef4444;
-    color: white;
-    font-weight: 600;
-  }
-
-  .calendar-day.selected {
-    background: #10b981;
-    color: white;
-    font-weight: 600;
-  }
-
-  .calendar-day.other-month {
-    color: #9ca3af;
-    background: #f9fafb;
-  }
-
-  .event-dot {
-    position: absolute;
-    bottom: 0.1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0.25rem;
-    height: 0.25rem;
-    border-radius: 50%;
-  }
-
-  .event-dot.training {
-    background: #10b981;
-  }
-
-  .event-dot.match {
-    background: #ef4444;
-  }
-
-  .event-dot.meeting {
-    background: #f59e0b;
-  }
-
-  .event-item {
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-    border-left: 4px solid;
-    transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .event-training {
-    background: #f0fdf4;
-    border-left-color: #10b981;
-    color: #065f46;
-  }
-
-  .event-match {
-    background: #fef2f2;
-    border-left-color: #ef4444;
-    color: #991b1b;
-  }
-
-  .event-meeting {
-    background: #fffbeb;
-    border-left-color: #f59e0b;
-    color: #92400e;
-  }
-
-  /* Estilos para el chat funcional */
-  .chat-message-own {
-    background: #10b981;
-    color: white;
-    border-radius: 1rem;
-    padding: 0.75rem;
-    margin-left: auto;
-    max-width: 70%;
-  }
-
-  .chat-message-other {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 1rem;
-    padding: 0.75rem;
-    max-width: 70%;
   }
 </style>
 <!-- ==== FIN DEL CSS TEMPORAL ==== -->
@@ -489,7 +451,8 @@
       <div class="dashboard-card next-match-card">
         <div class="text-3xl mb-3">🏆</div>
         <h3 class="text-lg font-semibold">Próximo Evento</h3>
-        <p class="text-blue-100">{{ playerStats.nextMatch }}</p>
+        <p class="text-blue-100 text-sm mt-1">{{ playerStats.nextEvent }}</p>
+        <p class="text-blue-200 text-xs">{{ playerStats.nextEventDate }}</p>
       </div>
     </div>
 
@@ -601,91 +564,194 @@
         </div>
       </div>
 
-      <!-- Stats View -->
+      <!-- Stats View CORREGIDA -->
       <div *ngIf="currentView === 'stats'" class="fade-in">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Mis Estadísticas</h2>
         
-        <!-- Stats principales -->
+        <!-- Stats principales MEJORADAS -->
         <div class="grid grid-cols-3 gap-4 mb-6">
           <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4 rounded-xl text-white text-center">
-            <h3 class="text-sm font-semibold mb-2">Partidos ⚽</h3>
-            <p class="text-2xl font-bold">{{ playerStats.matchesPlayed }}</p>
+            <div class="text-3xl mb-3">📊</div>
+            <h3 class="text-lg font-semibold">Mi Progreso</h3>
+            <p class="text-blue-100 text-sm mt-1">Evaluación continua</p>
           </div>
 
           <div class="bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-xl text-white text-center">
-            <h3 class="text-sm font-semibold mb-2">Goles 🥅</h3>
-            <p class="text-2xl font-bold">{{ playerStats.goals }}</p>
+            <div class="text-3xl mb-3">⭐</div>
+            <h3 class="text-lg font-semibold">Desempeño</h3>
+            <p class="text-green-100 text-sm mt-1">{{ getOverallPerformance() }}% General</p>
           </div>
 
           <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-4 rounded-xl text-white text-center">
-            <h3 class="text-sm font-semibold mb-2">Asistencias 🎯</h3>
-            <p class="text-2xl font-bold">{{ playerStats.assists }}</p>
+            <div class="text-3xl mb-3">🏆</div>
+            <h3 class="text-lg font-semibold">Próximo Evento</h3>
+            <p class="text-purple-100 text-sm mt-1">{{ playerStats.nextEvent }}</p>
+            <p class="text-purple-200 text-xs">{{ playerStats.nextEventDate }}</p>
           </div>
         </div>
 
-        <!-- Rendimiento del jugador -->
-        <div *ngIf="playerPerformance" class="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">Mi Rendimiento</h3>
-          <div class="space-y-4">
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="text-sm font-medium text-gray-700">Resistencia</span>
-                <span class="text-sm font-medium text-gray-700">{{ (playerPerformance.endurance * 20) | number:'1.0-0' }}%</span>
+        <!-- Gráfica de Rendimiento Principal -->
+        <div class="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-6">📈 Mi Progreso de Rendimiento</h3>
+          
+          <div *ngIf="playerPerformance" class="space-y-8">
+            <!-- Gráfica de barras horizontal mejorada -->
+            <div class="space-y-6">
+              <!-- Resistencia -->
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-lg">💪</span>
+                    <span class="text-md font-medium text-gray-700">Resistencia</span>
+                  </div>
+                  <span class="text-lg font-bold text-green-600">{{ getEndurancePercentage() }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-6">
+                  <div class="bg-gradient-to-r from-green-400 to-green-600 h-6 rounded-full transition-all duration-1000 flex items-center justify-end pr-2"
+                       [style.width.%]="getEndurancePercentage()">
+                    <span class="text-white text-xs font-bold"></span>
+                  </div>
+                </div>
               </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-green-500 h-2 rounded-full" [style.width.%]="playerPerformance.endurance * 20"></div>
+
+              <!-- Técnica -->
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-lg">⚽</span>
+                    <span class="text-md font-medium text-gray-700">Técnica</span>
+                  </div>
+                  <span class="text-lg font-bold text-blue-600">{{ getTechniquePercentage() }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-6">
+                  <div class="bg-gradient-to-r from-blue-400 to-blue-600 h-6 rounded-full transition-all duration-1000 flex items-center justify-end pr-2"
+                       [style.width.%]="getTechniquePercentage()">
+                    <span class="text-white text-xs font-bold"></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actitud -->
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-lg">😊</span>
+                    <span class="text-md font-medium text-gray-700">Actitud</span>
+                  </div>
+                  <span class="text-lg font-bold text-yellow-600">{{ getAttitudePercentage() }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-6">
+                  <div class="bg-gradient-to-r from-yellow-400 to-yellow-600 h-6 rounded-full transition-all duration-1000 flex items-center justify-end pr-2"
+                       [style.width.%]="getAttitudePercentage()">
+                    <span class="text-white text-xs font-bold"></span>
+                  </div>
+                </div>
               </div>
             </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="text-sm font-medium text-gray-700">Técnica</span>
-                <span class="text-sm font-medium text-gray-700">{{ (playerPerformance.technique * 20) | number:'1.0-0' }}%</span>
+
+            <!-- Métricas adicionales en grid -->
+            <div class="grid grid-cols-3 gap-4 pt-4 border-t">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-gray-800">{{ getTotalTrainings() }}</div>
+                <div class="text-sm text-gray-600">Sesiones</div>
               </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-blue-500 h-2 rounded-full" [style.width.%]="playerPerformance.technique * 20"></div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-gray-800">{{ getCurrentMonthTrainings() }}</div>
+                <div class="text-sm text-gray-600">Este Mes</div>
               </div>
-            </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="text-sm font-medium text-gray-700">Actitud</span>
-                <span class="text-sm font-medium text-gray-700">{{ (playerPerformance.attitude * 20) | number:'1.0-0' }}%</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-yellow-500 h-2 rounded-full" [style.width.%]="playerPerformance.attitude * 20"></div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-gray-800">{{ getConsistency() }}</div>
+                <div class="text-sm text-gray-600">Consistencia</div>
               </div>
             </div>
           </div>
+
+          <div *ngIf="!playerPerformance" class="text-center py-12">
+            <div class="text-6xl mb-4">📊</div>
+            <p class="text-gray-500 text-lg mb-2">Aún no hay datos de rendimiento</p>
+            <p class="text-sm text-gray-400">Los datos aparecerán después de que el entrenador evalúe tus entrenamientos</p>
+          </div>
         </div>
 
+        <!-- Gráfica de Barras Adicional CORREGIDA -->
         <div class="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">Rendimiento por Mes</h3>
-          <div class="text-center text-gray-500 py-12">
-            <div class="text-4xl mb-2">📊</div>
-            <p>Gráfico de rendimiento - En desarrollo</p>
-            <p class="text-sm">Esta funcionalidad estará disponible pronto</p>
+          <h3 class="text-lg font-semibold text-gray-800 mb-6">📊 Resumen de Métricas</h3>
+          
+          <div *ngIf="playerPerformance" class="space-y-6">
+            <!-- Gráfica de barras vertical CORREGIDA -->
+            <div class="bars-container">
+              <!-- Resistencia -->
+              <div class="bar-item">
+                <div class="bar-wrapper">
+                  <div class="bar bar-resistance" [style.height.%]="getEndurancePercentage()">
+                    <span class="bar-value">{{ getEndurancePercentage() }}%</span>
+                  </div>
+                </div>
+                <div class="bar-label">Resistencia</div>
+                <div class="bar-icon">💪</div>
+              </div>
+
+              <!-- Técnica -->
+              <div class="bar-item">
+                <div class="bar-wrapper">
+                  <div class="bar bar-technique" [style.height.%]="getTechniquePercentage()">
+                    <span class="bar-value">{{ getTechniquePercentage() }}%</span>
+                  </div>
+                </div>
+                <div class="bar-label">Técnica</div>
+                <div class="bar-icon">⚽</div>
+              </div>
+
+              <!-- Actitud -->
+              <div class="bar-item">
+                <div class="bar-wrapper">
+                  <div class="bar bar-attitude" [style.height.%]="getAttitudePercentage()">
+                    <span class="bar-value">{{ getAttitudePercentage() }}%</span>
+                  </div>
+                </div>
+                <div class="bar-label">Actitud</div>
+                <div class="bar-icon">😊</div>
+              </div>
+            </div>
+
+            <!-- Leyenda -->
+            <div class="grid grid-cols-3 gap-4 text-center pt-4 border-t">
+              <div>
+                <div class="text-sm font-semibold text-green-600">{{ getEndurancePercentage() }}%</div>
+                <div class="text-xs text-gray-500">Resistencia</div>
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-blue-600">{{ getTechniquePercentage() }}%</div>
+                <div class="text-xs text-gray-500">Técnica</div>
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-yellow-600">{{ getAttitudePercentage() }}%</div>
+                <div class="text-xs text-gray-500">Actitud</div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="!playerPerformance" class="text-center py-8">
+            <div class="text-4xl mb-2">📈</div>
+            <p class="text-gray-500">Esperando datos de evaluación</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Floating Action Buttons -->
-  <button (click)="toggleCalendar()" 
-          class="fixed left-4 top-4 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition duration-200 z-40">
+  <!-- Floating Action Buttons - FUERA DEL CONTENEDOR PRINCIPAL -->
+  <button (click)="toggleCalendar()" class="floating-btn calendar-btn">
     📅
   </button>
 
-  <button (click)="toggleChat()" 
-          class="fixed right-4 bottom-4 bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition duration-200 z-40">
+  <button (click)="toggleChat()" class="floating-btn chat-btn">
     💬
   </button>
 </div>
 
-<!-- Calendar Sidebar - Igual que el entrenador -->
-<div [class.hidden]="!calendarVisible" 
-     class="fixed left-0 top-0 h-full w-80 bg-white shadow-2xl z-50 overflow-y-auto transition-transform duration-300"
-     [class.translate-x-0]="calendarVisible"
-     [class.-translate-x-full]="!calendarVisible">
+<!-- Calendar Sidebar -->
+<div [class]="'sidebar calendar-sidebar ' + (calendarVisible ? 'open' : '')">
   <div class="p-0">
     <!-- Header con gradiente - MÁS COMPACTO -->
     <div class="calendar-header">
@@ -760,11 +826,8 @@
   </div>
 </div>
 
-<!-- Chat Sidebar - Mismo diseño que el entrenador -->
-<div [class.hidden]="!chatVisible" 
-     class="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300"
-     [class.translate-x-0]="chatVisible"
-     [class.translate-x-full]="!chatVisible">
+<!-- Chat Sidebar -->
+<div [class]="'sidebar chat-sidebar ' + (chatVisible ? 'open' : '')">
   <div class="p-4 border-b bg-green-600 text-white">
     <div class="flex justify-between items-center">
       <h2 class="text-lg font-bold">💬 Chat General</h2>
@@ -834,7 +897,7 @@
     </div>
   </div>
   
-  <!-- Área de escritura - MEJORADA -->
+  <!-- Área de escritura -->
   <div class="p-4 border-t bg-white border-gray-200">
     <div class="flex flex-col space-y-3">
       <!-- Input de texto -->

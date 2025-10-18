@@ -52,11 +52,14 @@ export class PlayerDashboardComponent implements OnInit {
 
   // Datos del jugador
   playerStats = {
-    matchesPlayed: 0,
-    goals: 0,
-    assists: 0,
-    nextMatch: 'Por programar'
-  };
+  trainingsCompleted: 0,
+  averageRating: 0,
+  nextEvent: 'Por programar',
+  nextEventDate: '',
+  matchesPlayed: 0, // Mantener por compatibilidad
+  goals: 0,
+  assists: 0
+};
 
   trainings: any[] = [];
   playerPerformance: any = null;
@@ -97,40 +100,120 @@ export class PlayerDashboardComponent implements OnInit {
     });
   }
 
-  loadPlayerStats() {
-    this.trainingService.getTeamStats().subscribe({
-      next: (stats) => {
-        this.playerStats = {
-          matchesPlayed: stats.matchesPlayed || 0,
-          goals: 0,
-          assists: 0,
-          nextMatch: this.getNextEvent() || 'Por programar'
-        };
-      },
-      error: (error) => {
-        console.error('Error loading stats:', error);
-        this.playerStats = {
-          matchesPlayed: 24,
-          goals: 8,
-          assists: 12,
-          nextMatch: 'Sábado 15:00'
-        };
-      }
-    });
+  // Métodos auxiliares para calcular porcentajes
+getEndurancePercentage(): number {
+  if (!this.playerPerformance?.endurance) return 0;
+  return Math.round(this.playerPerformance.endurance * 20);
+}
+
+getTechniquePercentage(): number {
+  if (!this.playerPerformance?.technique) return 0;
+  return Math.round(this.playerPerformance.technique * 20);
+}
+
+getAttitudePercentage(): number {
+  if (!this.playerPerformance?.attitude) return 0;
+  return Math.round(this.playerPerformance.attitude * 20);
+}
+
+getOverallPerformance(): number {
+  if (!this.playerPerformance?.overall) return 0;
+  return Math.round(this.playerPerformance.overall * 20);
+}
+
+getTotalTrainings(): number {
+  return this.playerPerformance?.totalTrainings || 0;
+}
+
+loadPlayerStats() {
+  this.trainingService.getPlayerStats().subscribe({
+    next: (stats) => {
+      const nextEventInfo = this.getNextEventInfo();
+
+      this.playerStats = {
+        trainingsCompleted: stats.trainingsCompleted || 0,
+        averageRating: this.getOverallPerformance(),
+        nextEvent: nextEventInfo.title || 'Por programar',
+        nextEventDate: nextEventInfo.date || '',
+        matchesPlayed: stats.matchesPlayed || 0,
+        goals: stats.goals || 0,
+        assists: stats.assists || 0
+      };
+    },
+    error: (error) => {
+      console.error('Error loading stats:', error);
+      this.playerStats = {
+        trainingsCompleted: 0,
+        averageRating: 0,
+        nextEvent: 'Por programar',
+        nextEventDate: '',
+        matchesPlayed: 0,
+        goals: 0,
+        assists: 0
+      };
+    }
+  });
+}
+
+getNextEventInfo(): { title: string, date: string } {
+  if (this.nextEvent) {
+    const date = new Date(this.nextEvent.fullDate);
+    return {
+      title: this.nextEvent.title,
+      date: date.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    };
   }
+  return { title: 'Por programar', date: '' };
+}
+
+// Métodos auxiliares para las estadísticas mensuales
+getCurrentMonthTrainings(): number {
+  if (!this.trainings || this.trainings.length === 0) return 0;
+  
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  
+  return this.trainings.filter(training => {
+    const trainingDate = new Date(training.date);
+    return trainingDate.getMonth() === currentMonth && 
+           trainingDate.getFullYear() === currentYear;
+  }).length;
+}
+
+getConsistency(): string {
+  if (!this.playerPerformance) return '-';
+  
+  const scores = [
+    this.getEndurancePercentage(),
+    this.getTechniquePercentage(), 
+    this.getAttitudePercentage()
+  ];
+  
+  const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+  
+  if (average >= 85) return 'Alta';
+  if (average >= 70) return 'Media';
+  if (average >= 50) return 'Básica';
+  return 'En desarrollo';
+}
+
+getImprovement(): number {
+  // Simular mejora basada en el rendimiento
+  if (!this.playerPerformance) return 0;
+  return Math.round((this.playerPerformance.overall * 20) / 10);
+}
 
   // En el método loadPlayerTrainings
 loadPlayerTrainings() {
-  console.log('🔄 Cargando entrenamientos del jugador...');
-  
   this.trainingService.getPlayerTrainings().subscribe({
     next: (trainings) => {
-      console.log('✅ Entrenamientos recibidos del backend:', trainings);
-      
-      if (trainings.length === 0) {
-        console.log('ℹ️ No se encontraron entrenamientos para este jugador');
-      }
-
+      console.log('🏃 Entrenamientos del jugador:', trainings);
       this.trainings = trainings.map((training: any) => ({
         id: training.id,
         title: training.title,
@@ -144,16 +227,16 @@ loadPlayerTrainings() {
         bgClass: this.getBgClass(training.type)
       }));
 
-      console.log('📅 Entrenamientos procesados:', this.trainings);
-
       // Procesar para calendario
       this.processTrainingsForCalendar(trainings);
       this.updateNextEvent();
       this.generateCalendar();
+      
+      // Actualizar estadísticas después de cargar entrenamientos
+      this.loadPlayerStats();
     },
     error: (error) => {
-      console.error('❌ Error cargando entrenamientos:', error);
-      console.error('Detalles del error:', error.error);
+      console.error('Error loading trainings:', error);
       this.trainings = [];
     }
   });
@@ -314,33 +397,44 @@ loadPlayerTrainings() {
   }
 
   processTrainingsForCalendar(trainings: any[]) {
-  this.calendarEvents = {};
+    this.calendarEvents = {};
 
-  trainings.forEach(training => {
-    const trainingDate = new Date(training.date);
-    const dateStr = this.formatDate(trainingDate);
-    const timeStr = trainingDate.toLocaleTimeString('es-ES', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    trainings.forEach(training => {
+        // CORRECCIÓN: Usar la fecha directamente
+        const trainingDate = new Date(training.date);
+        
+        // Formatear fecha correctamente
+        const dateStr = this.formatDateForCalendar(trainingDate);
+        const timeStr = trainingDate.toLocaleTimeString('es-ES', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        const calendarEvent: CalendarEvent = {
+            id: training.id,
+            title: training.title,
+            time: timeStr,
+            type: training.type,
+            description: training.description,
+            originalTraining: training
+        };
+
+        if (!this.calendarEvents[dateStr]) {
+            this.calendarEvents[dateStr] = [];
+        }
+
+        this.calendarEvents[dateStr].push(calendarEvent);
     });
 
-    const calendarEvent: CalendarEvent = {
-      id: training.id,
-      title: training.title,
-      time: timeStr,
-      type: training.type,
-      description: training.description,
-      originalTraining: training
-    };
+    console.log('📅 Eventos del calendario procesados:', this.calendarEvents);
+}
 
-    if (!this.calendarEvents[dateStr]) {
-      this.calendarEvents[dateStr] = [];
-    }
-
-    this.calendarEvents[dateStr].push(calendarEvent);
-  });
-
-  console.log('📅 Eventos del calendario procesados:', this.calendarEvents);
+formatDateForCalendar(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
 }
 
   updateNextEvent() {
@@ -484,8 +578,8 @@ loadPlayerTrainings() {
 
   // Helper methods
   formatDate(date: Date): string {
-    return date.toISOString().split('T')[0];
-  }
+    return this.formatDateForCalendar(date);
+}
 
   formatTrainingDate(dateString: string): string {
     const date = new Date(dateString);

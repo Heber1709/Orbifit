@@ -72,33 +72,50 @@ export class PlayerService {
   }
 
   async getPlayerStats(playerId: number) {
-    try {
-      const trainingsCount = await this.prisma.training.count({
-        where: {
-          participants: {
-            some: {
-              playerId: playerId
-            }
+  try {
+    const trainingsCount = await this.prisma.training.count({
+      where: {
+        participants: {
+          some: {
+            playerId: playerId
           }
         }
-      });
+      }
+    });
 
-      return {
-        matchesPlayed: trainingsCount,
-        goals: 0,
-        assists: 0,
-        nextMatch: 'Por programar'
-      };
-    } catch (error) {
-      this.logger.error(`❌ Error obteniendo estadísticas: ${error.message}`);
-      return {
-        matchesPlayed: 0,
-        goals: 0,
-        assists: 0,
-        nextMatch: 'Por programar'
-      };
-    }
+    const completedTrainings = await this.prisma.training.count({
+      where: {
+        participants: {
+          some: {
+            playerId: playerId
+          }
+        },
+        date: {
+          lt: new Date() // Entrenamientos que ya pasaron
+        }
+      }
+    });
+
+    return {
+      trainingsCompleted: completedTrainings,
+      totalTrainings: trainingsCount,
+      matchesPlayed: completedTrainings,
+      goals: 0,
+      assists: 0,
+      nextMatch: 'Por programar'
+    };
+  } catch (error) {
+    this.logger.error(`❌ Error obteniendo estadísticas: ${error.message}`);
+    return {
+      trainingsCompleted: 0,
+      totalTrainings: 0,
+      matchesPlayed: 0,
+      goals: 0,
+      assists: 0,
+      nextMatch: 'Por programar'
+    };
   }
+}
 
   async getPlayerPerformance(playerId: number) {
     try {
