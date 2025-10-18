@@ -130,24 +130,10 @@ export declare class CoachController {
         training: {
             id: number;
             title: string;
-            type: import(".prisma/client").$Enums.TrainingType;
             date: Date;
+            type: import(".prisma/client").$Enums.TrainingType;
         };
         players: any;
-        playerResults: ({
-            player: {
-                firstName: string;
-                lastName: string;
-            };
-        } & {
-            id: number;
-            playerId: number;
-            trainingId: number;
-            endurance: number | null;
-            technique: number | null;
-            attitude: number | null;
-            notes: string | null;
-        })[];
         generalObservations: string;
         rating: number;
         updatedAt: Date;

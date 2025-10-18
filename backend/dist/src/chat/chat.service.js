@@ -16,85 +16,82 @@ let ChatService = class ChatService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getMessages() {
-        return this.prisma.message.findMany({
-            orderBy: { id: 'asc' },
-            include: {
-                sender: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        role: true,
-                    },
+    async getGeneralMessages() {
+        try {
+            const messages = await this.prisma.message.findMany({
+                where: {
+                    type: 'GENERAL',
+                    receiverId: null
                 },
-                receiver: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        role: true,
-                    },
+                orderBy: { createdAt: 'asc' },
+                include: {
+                    sender: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            role: true,
+                        },
+                    }
                 },
-            },
-        });
+            });
+            return messages;
+        }
+        catch (error) {
+            console.error('Error getting general messages:', error);
+            return [];
+        }
     }
-    async getPrivateMessages(userId, receiverId) {
-        return this.prisma.message.findMany({
-            where: {
-                OR: [
-                    { senderId: userId, receiverId: receiverId },
-                    { senderId: receiverId, receiverId: userId },
-                ],
-            },
-            orderBy: { id: 'asc' },
-            include: {
-                sender: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        role: true,
-                    },
+    async sendMessage(senderId, content) {
+        try {
+            const message = await this.prisma.message.create({
+                data: {
+                    content: content.trim(),
+                    senderId: senderId,
+                    type: 'GENERAL',
                 },
-                receiver: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        role: true,
-                    },
+                include: {
+                    sender: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            role: true,
+                        },
+                    }
                 },
-            },
-        });
+            });
+            return message;
+        }
+        catch (error) {
+            console.error('Error sending message:', error);
+            throw new Error('Error al enviar el mensaje');
+        }
     }
-    async sendMessage(senderId, content, receiverId) {
-        return this.prisma.message.create({
-            data: {
-                content,
-                senderId,
-                receiverId,
-                type: receiverId ? 'PRIVADO' : 'GENERAL',
-            },
-            include: {
-                sender: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        role: true,
-                    },
+    async getTeamMembers(currentUserId) {
+        try {
+            const members = await this.prisma.user.findMany({
+                where: {
+                    id: { not: currentUserId },
+                    isActive: true
                 },
-                receiver: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        role: true,
-                    },
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    role: true,
+                    position: true,
                 },
-            },
-        });
+                orderBy: {
+                    firstName: 'asc'
+                }
+            });
+            return members;
+        }
+        catch (error) {
+            console.error('Error getting team members:', error);
+            return [];
+        }
     }
 };
 exports.ChatService = ChatService;

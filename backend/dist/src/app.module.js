@@ -13,6 +13,8 @@ const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const database_module_1 = require("./database/database.module");
 const coach_module_1 = require("./coach/coach.module");
+const chat_module_1 = require("./chat/chat.module");
+const player_module_1 = require("./player/player.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -26,6 +28,8 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             coach_module_1.CoachModule,
+            chat_module_1.ChatModule,
+            player_module_1.PlayerModule,
         ],
     })
 ], AppModule);

@@ -2,14 +2,8 @@ import { ChatService } from './chat.service';
 export declare class ChatController {
     private chatService;
     constructor(chatService: ChatService);
-    getMessages(): Promise<({
+    getGeneralMessages(): Promise<({
         sender: {
-            id: number;
-            firstName: string;
-            lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
-        };
-        receiver: {
             id: number;
             firstName: string;
             lastName: string;
@@ -30,12 +24,6 @@ export declare class ChatController {
             lastName: string;
             role: import(".prisma/client").$Enums.UserRole;
         };
-        receiver: {
-            id: number;
-            firstName: string;
-            lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
-        };
     } & {
         id: number;
         createdAt: Date;
@@ -44,25 +32,11 @@ export declare class ChatController {
         senderId: number;
         receiverId: number | null;
     }>;
-    getPrivateMessages(req: any, receiverId: number): Promise<({
-        sender: {
-            id: number;
-            firstName: string;
-            lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
-        };
-        receiver: {
-            id: number;
-            firstName: string;
-            lastName: string;
-            role: import(".prisma/client").$Enums.UserRole;
-        };
-    } & {
+    getTeamMembers(req: any): Promise<{
         id: number;
-        createdAt: Date;
-        type: import(".prisma/client").$Enums.MessageType;
-        content: string;
-        senderId: number;
-        receiverId: number | null;
-    })[]>;
+        firstName: string;
+        lastName: string;
+        role: import(".prisma/client").$Enums.UserRole;
+        position: import(".prisma/client").$Enums.PlayerPosition;
+    }[]>;
 }

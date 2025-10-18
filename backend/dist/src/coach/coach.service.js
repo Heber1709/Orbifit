@@ -170,34 +170,48 @@ let CoachService = class CoachService {
         if (!existing) {
             throw new Error('Entrenamiento no encontrado');
         }
-        await this.prisma.trainingParticipant.deleteMany({
-            where: { trainingId: trainingId }
-        });
-        await this.prisma.training.delete({
-            where: { id: trainingId }
-        });
-        console.log('✅ SERVICE: Eliminado exitosamente');
-        return {
-            success: true,
-            message: 'Entrenamiento eliminado exitosamente'
-        };
-    }
-    async saveTrainingResults(coachId, resultsData) {
-        console.log('💾 SERVICE: Guardando resultados de entrenamiento');
-        console.log('📊 Datos recibidos:', resultsData);
-        const { trainingId, players, generalObservations, rating } = resultsData;
-        const training = await this.prisma.training.findFirst({
-            where: {
-                id: parseInt(trainingId.toString()),
-                coachId: coachId
-            }
-        });
-        if (!training) {
-            throw new Error('Entrenamiento no encontrado o no autorizado');
-        }
         try {
             await this.prisma.trainingResult.deleteMany({
+                where: { trainingId: trainingId }
+            });
+            await this.prisma.trainingParticipant.deleteMany({
+                where: { trainingId: trainingId }
+            });
+            await this.prisma.training.delete({
+                where: { id: trainingId }
+            });
+            console.log('✅ SERVICE: Entrenamiento eliminado exitosamente');
+            return {
+                success: true,
+                message: 'Entrenamiento eliminado exitosamente'
+            };
+        }
+        catch (error) {
+            console.error('❌ SERVICE: Error eliminando entrenamiento:', error);
+            throw new Error('Error al eliminar el entrenamiento: ' + error.message);
+        }
+    }
+    async saveTrainingResults(coachId, resultsData) {
+        console.log('💾 SERVICE: Guardando resultados');
+        const { trainingId, players, generalObservations, rating } = resultsData;
+        try {
+            const training = await this.prisma.training.findFirst({
+                where: {
+                    id: parseInt(trainingId.toString()),
+                    coachId: coachId
+                }
+            });
+            if (!training) {
+                throw new Error('Entrenamiento no encontrado');
+            }
+            await this.prisma.trainingResult.deleteMany({
                 where: { trainingId: parseInt(trainingId.toString()) }
+            });
+            await this.prisma.training.update({
+                where: { id: parseInt(trainingId.toString()) },
+                data: {
+                    description: generalObservations || training.description
+                }
             });
             for (const [playerName, playerData] of Object.entries(players)) {
                 const nameParts = playerName.split(' ');
@@ -224,7 +238,7 @@ let CoachService = class CoachService {
                     });
                 }
             }
-            console.log('✅ SERVICE: Resultados guardados exitosamente');
+            console.log('✅ SERVICE: Resultados guardados EXITOSAMENTE');
             return {
                 success: true,
                 message: 'Resultados guardados correctamente',
@@ -237,17 +251,17 @@ let CoachService = class CoachService {
         }
     }
     async getTrainingResults(coachId, trainingId) {
-        console.log('📋 SERVICE: Obteniendo resultados del entrenamiento', trainingId);
-        const training = await this.prisma.training.findFirst({
-            where: {
-                id: trainingId,
-                coachId: coachId
-            }
-        });
-        if (!training) {
-            throw new Error('Entrenamiento no encontrado o no autorizado');
-        }
+        console.log('📋 SERVICE: Obteniendo resultados para entrenamiento', trainingId);
         try {
+            const training = await this.prisma.training.findFirst({
+                where: {
+                    id: trainingId,
+                    coachId: coachId
+                }
+            });
+            if (!training) {
+                return null;
+            }
             const trainingResults = await this.prisma.trainingResult.findMany({
                 where: { trainingId },
                 include: {
@@ -271,44 +285,35 @@ let CoachService = class CoachService {
                     observations: result.notes || ''
                 };
             });
-            const ratings = trainingResults.map(result => (result.endurance + result.technique + result.attitude) / 3);
-            const averageRating = ratings.length > 0 ?
-                Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : 0;
             return {
                 trainingId,
                 players,
-                generalObservations: '',
-                rating: averageRating,
+                generalObservations: training.description || '',
+                rating: 0,
                 playerResults: trainingResults
             };
         }
         catch (error) {
             console.error('❌ SERVICE: Error obteniendo resultados:', error);
-            return {
-                trainingId,
-                players: {},
-                generalObservations: '',
-                rating: 0,
-                playerResults: []
-            };
+            return null;
         }
     }
     async deleteTrainingResults(coachId, trainingId) {
         console.log('🗑️ SERVICE: Eliminando resultados del entrenamiento', trainingId);
-        const training = await this.prisma.training.findFirst({
-            where: {
-                id: trainingId,
-                coachId: coachId
-            }
-        });
-        if (!training) {
-            throw new Error('Entrenamiento no encontrado o no autorizado');
-        }
         try {
+            const training = await this.prisma.training.findFirst({
+                where: {
+                    id: trainingId,
+                    coachId: coachId
+                }
+            });
+            if (!training) {
+                throw new Error('Entrenamiento no encontrado');
+            }
             await this.prisma.trainingResult.deleteMany({
                 where: { trainingId: trainingId }
             });
-            console.log('✅ SERVICE: Resultados eliminados exitosamente');
+            console.log('✅ SERVICE: Resultados eliminados EXITOSAMENTE');
             return {
                 success: true,
                 message: 'Resultados eliminados correctamente'
@@ -320,31 +325,35 @@ let CoachService = class CoachService {
         }
     }
     async getAllTrainingResults(coachId) {
-        console.log('📋 SERVICE: Obteniendo todos los resultados del coach', coachId);
+        console.log('📋 SERVICE: Obteniendo TODOS los resultados');
         try {
-            const trainings = await this.prisma.training.findMany({
-                where: { coachId },
-                select: {
-                    id: true,
-                    title: true,
-                    date: true,
-                    type: true
-                }
-            });
-            const resultsWithDetails = await Promise.all(trainings.map(async (training) => {
-                const trainingResults = await this.prisma.trainingResult.findMany({
-                    where: { trainingId: training.id },
-                    include: {
-                        player: {
-                            select: {
-                                firstName: true,
-                                lastName: true
+            const trainingsWithResults = await this.prisma.training.findMany({
+                where: {
+                    coachId: coachId,
+                    results: {
+                        some: {}
+                    }
+                },
+                include: {
+                    results: {
+                        include: {
+                            player: {
+                                select: {
+                                    firstName: true,
+                                    lastName: true
+                                }
                             }
                         }
                     }
-                });
+                },
+                orderBy: {
+                    date: 'desc'
+                }
+            });
+            console.log(`🏆 Entrenamientos con resultados: ${trainingsWithResults.length}`);
+            const results = trainingsWithResults.map(training => {
                 const players = {};
-                trainingResults.forEach(result => {
+                training.results.forEach(result => {
                     const playerName = `${result.player.firstName} ${result.player.lastName}`;
                     players[playerName] = {
                         endurance: this.mapNumberToRating(result.endurance),
@@ -353,21 +362,21 @@ let CoachService = class CoachService {
                         observations: result.notes || ''
                     };
                 });
-                const ratings = trainingResults.map(result => (result.endurance + result.technique + result.attitude) / 3);
-                const averageRating = ratings.length > 0 ?
-                    Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : 0;
                 return {
                     trainingId: training.id,
-                    training: training,
+                    training: {
+                        id: training.id,
+                        title: training.title,
+                        date: training.date,
+                        type: training.type
+                    },
                     players: players,
-                    playerResults: trainingResults,
-                    generalObservations: '',
-                    rating: averageRating,
+                    generalObservations: training.description || '',
+                    rating: 0,
                     updatedAt: new Date()
                 };
-            }));
-            console.log('✅ Resultados encontrados:', resultsWithDetails.length);
-            return resultsWithDetails;
+            });
+            return results;
         }
         catch (error) {
             console.error('❌ SERVICE: Error obteniendo todos los resultados:', error);

@@ -46,7 +46,7 @@ export interface TrainingResults {
   providedIn: 'root'
 })
 export class TrainingService {
-  public apiUrl = environment.apiUrl;
+  private apiUrl = 'http://localhost:3000';
 
   constructor(private http: HttpClient) {}
 
@@ -138,9 +138,16 @@ export class TrainingService {
     });
   }
 
-  getPlayerTrainings(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/player/trainings`, {
-      headers: this.getHeaders()
-    });
-  }
+  getPlayerTrainings(): Observable<any> {
+  return this.http.get<any>(`${this.apiUrl}/player/trainings`);
+}
+
+getPlayerStats(): Observable<any> {
+  return this.http.get<any>(`${this.apiUrl}/player/stats`);
+}
+
+getPlayerPerformance(): Observable<any> {
+  return this.http.get<any>(`${this.apiUrl}/player/performance`);
+}
+
 }

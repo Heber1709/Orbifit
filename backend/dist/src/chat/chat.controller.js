@@ -20,26 +20,26 @@ let ChatController = class ChatController {
     constructor(chatService) {
         this.chatService = chatService;
     }
-    async getMessages() {
-        return this.chatService.getMessages();
+    async getGeneralMessages() {
+        return await this.chatService.getGeneralMessages();
     }
     async sendMessage(req, messageData) {
-        const { content, receiverId } = messageData;
-        return this.chatService.sendMessage(req.user.userId, content, receiverId);
+        const { content } = messageData;
+        return await this.chatService.sendMessage(req.user.userId, content);
     }
-    async getPrivateMessages(req, receiverId) {
-        return this.chatService.getPrivateMessages(req.user.userId, receiverId);
+    async getTeamMembers(req) {
+        return await this.chatService.getTeamMembers(req.user.userId);
     }
 };
 exports.ChatController = ChatController;
 __decorate([
-    (0, common_1.Get)('messages'),
+    (0, common_1.Get)('messages/general'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], ChatController.prototype, "getMessages", null);
+], ChatController.prototype, "getGeneralMessages", null);
 __decorate([
-    (0, common_1.Post)('send'),
+    (0, common_1.Post)('messages/send'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -47,13 +47,12 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "sendMessage", null);
 __decorate([
-    (0, common_1.Get)('private/:receiverId'),
+    (0, common_1.Get)('team-members'),
     __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('receiverId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], ChatController.prototype, "getPrivateMessages", null);
+], ChatController.prototype, "getTeamMembers", null);
 exports.ChatController = ChatController = __decorate([
     (0, common_1.Controller)('chat'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),

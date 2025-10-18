@@ -367,70 +367,71 @@ export class CoachService {
     }
   }
 
-  async getAllTrainingResults(coachId: number) {
-    console.log('📋 SERVICE: Obteniendo TODOS los resultados');
+  // En coach.service.ts - CORRIGE este método
+async getAllTrainingResults(coachId: number) {
+  console.log('📋 SERVICE: Obteniendo TODOS los resultados');
 
-    try {
-      const trainingsWithResults = await this.prisma.training.findMany({
-        where: { 
-          coachId: coachId,
-          trainingResults: {
-            some: {}
-          }
-        },
-        include: {
-          trainingResults: {
-            include: {
-              player: {
-                select: {
-                  firstName: true,
-                  lastName: true
-                }
+  try {
+    const trainingsWithResults = await this.prisma.training.findMany({
+      where: { 
+        coachId: coachId,
+        results: {  // CAMBIA: trainingResults por results
+          some: {}
+        }
+      },
+      include: {
+        results: {  // CAMBIA: trainingResults por results
+          include: {
+            player: {
+              select: {
+                firstName: true,
+                lastName: true
               }
             }
           }
-        },
-        orderBy: {
-          date: 'desc'
         }
-      });
+      },
+      orderBy: {
+        date: 'desc'
+      }
+    });
 
-      console.log(`🏆 Entrenamientos con resultados: ${trainingsWithResults.length}`);
+    console.log(`🏆 Entrenamientos con resultados: ${trainingsWithResults.length}`);
 
-      const results = trainingsWithResults.map(training => {
-        const players: any = {};
-        training.trainingResults.forEach(result => {
-          const playerName = `${result.player.firstName} ${result.player.lastName}`;
-          players[playerName] = {
-            endurance: this.mapNumberToRating(result.endurance),
-            technique: this.mapNumberToRating(result.technique),
-            attitude: this.mapNumberToRating(result.attitude),
-            observations: result.notes || ''
-          };
-        });
-
-        return {
-          trainingId: training.id,
-          training: {
-            id: training.id,
-            title: training.title,
-            date: training.date,
-            type: training.type
-          },
-          players: players,
-          generalObservations: '',
-          rating: 0,
-          updatedAt: new Date()
+    const results = trainingsWithResults.map(training => {
+      const players: any = {};
+      training.results.forEach(result => {  // CAMBIA: trainingResults por results
+        const playerName = `${result.player.firstName} ${result.player.lastName}`;
+        players[playerName] = {
+          endurance: this.mapNumberToRating(result.endurance),
+          technique: this.mapNumberToRating(result.technique),
+          attitude: this.mapNumberToRating(result.attitude),
+          observations: result.notes || ''
         };
       });
 
-      return results;
+      return {
+        trainingId: training.id,
+        training: {
+          id: training.id,
+          title: training.title,
+          date: training.date,
+          type: training.type
+        },
+        players: players,
+        generalObservations: training.description || '',
+        rating: 0,
+        updatedAt: new Date()
+      };
+    });
 
-    } catch (error) {
-      console.error('❌ SERVICE: Error obteniendo todos los resultados:', error);
-      return [];
-    }
+    return results;
+
+  } catch (error) {
+    console.error('❌ SERVICE: Error obteniendo todos los resultados:', error);
+    return [];
   }
+}
 
   private mapRatingToNumber(rating: string): number {
     const ratingMap: { [key: string]: number } = {

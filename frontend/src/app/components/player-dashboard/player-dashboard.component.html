@@ -1,5 +1,7 @@
 <!-- ==== AGREGAR ESTO AL PRINCIPIO DEL ARCHIVO ==== -->
 <style>
+
+  
   /* Fuerzar dimensiones exactas */
   .dashboard-container {
     max-width: 1280px;
@@ -23,6 +25,285 @@
   @media (min-width: 1024px) {
     .cards-grid {
       grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  /* Estilos para el chat igual que el entrenador */
+  /* ==== MEJORAS PARA EL CALENDARIO - IGUAL QUE ENTRENADOR ==== */
+  .calendar-sidebar {
+    width: 24rem !important;
+    background: white !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    z-index: 1000 !important;
+    overflow-y: auto !important;
+  }
+
+  /* Botón de cerrar más pequeño y rojo */
+  .calendar-close-btn {
+    background: #ef4444 !important;
+    color: white !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    cursor: pointer !important;
+    font-size: 1.25rem !important;
+    transition: all 0.2s !important;
+  }
+
+  .calendar-close-btn:hover {
+    background: #dc2626 !important;
+    transform: scale(1.1) !important;
+  }
+
+  /* Botones de navegación del mes más pequeños */
+  .month-nav-btn {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #d1d5db !important;
+    background: white !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    font-size: 1rem !important;
+  }
+
+  .month-nav-btn:hover {
+    background: #f3f4f6 !important;
+    border-color: #9ca3af !important;
+  }
+
+  /* CONTENEDOR DE DÍAS DEL CALENDARIO - MEJORADO */
+  .calendar-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: 0.15rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* DÍAS DEL CALENDARIO - TAMAÑO FIJO Y PERFECTO */
+  .calendar-day {
+    width: 2rem !important;
+    height: 2rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 0.375rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    position: relative !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    margin: 0 auto !important;
+  }
+
+  .calendar-day:hover {
+    background: #3b82f6 !important;
+    color: white !important;
+    transform: scale(1.05) !important;
+  }
+
+  .calendar-day.today {
+    background: #ef4444 !important;
+    color: white !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3) !important;
+  }
+
+  .calendar-day.selected {
+    background: #10b981 !important;
+    color: white !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3) !important;
+  }
+
+  .calendar-day.other-month {
+    color: #9ca3af !important;
+    background: #f9fafb !important;
+  }
+
+  .calendar-day.other-month:hover {
+    background: #e5e7eb !important;
+    color: #6b7280 !important;
+  }
+
+  /* DÍAS DE LA SEMANA - MEJORADO */
+  .week-day {
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    color: #4b5563 !important;
+    text-align: center !important;
+    padding: 0.4rem 0 !important;
+    text-transform: uppercase !important;
+    background: #f8fafc !important;
+    border-radius: 0.25rem !important;
+    margin: 0.1rem !important;
+  }
+
+  /* Indicador de eventos mejorado */
+  .event-dot {
+    position: absolute !important;
+    bottom: 0.1rem !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 0.25rem !important;
+    height: 0.25rem !important;
+    border-radius: 50% !important;
+  }
+
+  .event-dot.training {
+    background: #10b981 !important;
+  }
+
+  .event-dot.match {
+    background: #ef4444 !important;
+  }
+
+  .event-dot.meeting {
+    background: #f59e0b !important;
+  }
+
+  /* Eventos del día mejorados */
+  .event-item {
+    padding: 0.75rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    border-left: 4px solid !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    position: relative !important;
+  }
+
+  .event-item:hover {
+    transform: translateX(2px) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .event-training {
+    background: #f0fdf4 !important;
+    border-left-color: #10b981 !important;
+    color: #065f46 !important;
+  }
+
+  .event-match {
+    background: #fef2f2 !important;
+    border-left-color: #ef4444 !important;
+    color: #991b1b !important;
+  }
+
+  .event-meeting {
+    background: #fffbeb !important;
+    border-left-color: #f59e0b !important;
+    color: #92400e !important;
+  }
+
+  /* Header del calendario mejorado - MÁS COMPACTO */
+  .calendar-header {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    color: white !important;
+    padding: 1rem 1.5rem !important;
+    margin: -1.5rem -1.5rem 1rem -1.5rem !important;
+  }
+
+  .calendar-month {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    margin: 0 !important;
+  }
+
+  /* Botón flotante más pequeño */
+  .floating-btn {
+    width: 3rem !important;
+    height: 3rem !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.125rem !important;
+    z-index: 40 !important;
+    border: none !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+    position: fixed !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .floating-btn:hover {
+    transform: scale(1.1) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .calendar-btn {
+    background: #3b82f6 !important;
+    color: white !important;
+    left: 1rem !important;
+    top: 1rem !important;
+  }
+
+  .calendar-btn:hover {
+    background: #2563eb !important;
+  }
+
+  .chat-btn {
+    background: #10b981 !important;
+    color: white !important;
+    right: 1rem !important;
+    bottom: 1rem !important;
+  }
+
+  .chat-btn:hover {
+    background: #059669 !important;
+  }
+
+  .sidebar {
+    width: 24rem !important;
+    height: 100vh !important;
+    background: white !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    z-index: 50 !important;
+    position: fixed !important;
+    top: 0 !important;
+    transition: transform 0.3s ease-in-out !important;
+    overflow-y: auto !important;
+  }
+
+  .calendar-sidebar {
+    left: 0 !important;
+    transform: translateX(-100%) !important;
+  }
+
+  .calendar-sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  .chat-sidebar {
+    right: 0 !important;
+    transform: translateX(100%) !important;
+  }
+
+  .chat-sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { 
+      opacity: 0; 
+      transform: translateY(10px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
     }
   }
   
@@ -51,13 +332,117 @@
     color: white;
     min-height: 140px;
   }
+
+  /* Estilos para el calendario funcional */
+  .calendar-day {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin: 0 auto;
+  }
+
+  .calendar-day:hover {
+    background: #3b82f6;
+    color: white;
+    transform: scale(1.05);
+  }
+
+  .calendar-day.today {
+    background: #ef4444;
+    color: white;
+    font-weight: 600;
+  }
+
+  .calendar-day.selected {
+    background: #10b981;
+    color: white;
+    font-weight: 600;
+  }
+
+  .calendar-day.other-month {
+    color: #9ca3af;
+    background: #f9fafb;
+  }
+
+  .event-dot {
+    position: absolute;
+    bottom: 0.1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 50%;
+  }
+
+  .event-dot.training {
+    background: #10b981;
+  }
+
+  .event-dot.match {
+    background: #ef4444;
+  }
+
+  .event-dot.meeting {
+    background: #f59e0b;
+  }
+
+  .event-item {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .event-training {
+    background: #f0fdf4;
+    border-left-color: #10b981;
+    color: #065f46;
+  }
+
+  .event-match {
+    background: #fef2f2;
+    border-left-color: #ef4444;
+    color: #991b1b;
+  }
+
+  .event-meeting {
+    background: #fffbeb;
+    border-left-color: #f59e0b;
+    color: #92400e;
+  }
+
+  /* Estilos para el chat funcional */
+  .chat-message-own {
+    background: #10b981;
+    color: white;
+    border-radius: 1rem;
+    padding: 0.75rem;
+    margin-left: auto;
+    max-width: 70%;
+  }
+
+  .chat-message-other {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    padding: 0.75rem;
+    max-width: 70%;
+  }
 </style>
 <!-- ==== FIN DEL CSS TEMPORAL ==== -->
 
-<!-- EL RESTO DE TU HTML ACTUAL CONTINÚA AQUÍ -->
 <!-- Dashboard Jugador -->
 <div class="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900">
-
 
   <!-- Navigation -->
   <nav class="bg-white shadow-lg">
@@ -82,33 +467,31 @@
   <!-- Main Content -->
   <div class="max-w-7xl mx-auto p-6">
     <!-- Quick Actions Grid -->
-   <!-- ==== REEMPLAZAR ESTA SECCIÓN ==== -->
-<div class="cards-grid">
-  <button (click)="showPlayerProfile()" class="dashboard-card">
-    <div class="text-3xl mb-3">👤</div>
-    <h3 class="text-lg font-semibold text-gray-800">Mi Perfil</h3>
-    <p class="text-gray-600">Ver y editar información personal</p>
-  </button>
+    <div class="cards-grid">
+      <button (click)="showPlayerProfile()" class="dashboard-card">
+        <div class="text-3xl mb-3">👤</div>
+        <h3 class="text-lg font-semibold text-gray-800">Mi Perfil</h3>
+        <p class="text-gray-600">Ver y editar información personal</p>
+      </button>
 
-  <button (click)="showTrainings()" class="dashboard-card">
-    <div class="text-3xl mb-3">📅</div>
-    <h3 class="text-lg font-semibold text-gray-800">Entrenamientos</h3>
-    <p class="text-gray-600">Ver entrenamientos programados</p>
-  </button>
+      <button (click)="showTrainings()" class="dashboard-card">
+        <div class="text-3xl mb-3">📅</div>
+        <h3 class="text-lg font-semibold text-gray-800">Entrenamientos</h3>
+        <p class="text-gray-600">Ver entrenamientos programados</p>
+      </button>
 
-  <button (click)="showPlayerStats()" class="dashboard-card">
-    <div class="text-3xl mb-3">📊</div>
-    <h3 class="text-lg font-semibold text-gray-800">Estadísticas</h3>
-    <p class="text-gray-600">Ver mi rendimiento</p>
-  </button>
+      <button (click)="showPlayerStats()" class="dashboard-card">
+        <div class="text-3xl mb-3">📊</div>
+        <h3 class="text-lg font-semibold text-gray-800">Estadísticas</h3>
+        <p class="text-gray-600">Ver mi rendimiento</p>
+      </button>
 
-  <div class="dashboard-card next-match-card">
-    <div class="text-3xl mb-3">🏆</div>
-    <h3 class="text-lg font-semibold">Próximo Partido</h3>
-    <p class="text-blue-100">{{ playerStats.nextMatch }}</p>
-  </div>
-</div>
-<!-- ==== FIN DEL REEMPLAZO ==== -->
+      <div class="dashboard-card next-match-card">
+        <div class="text-3xl mb-3">🏆</div>
+        <h3 class="text-lg font-semibold">Próximo Evento</h3>
+        <p class="text-blue-100">{{ playerStats.nextMatch }}</p>
+      </div>
+    </div>
 
     <!-- Dynamic Content Area -->
     <div class="bg-white rounded-xl shadow-lg p-6 min-h-[400px]">
@@ -118,15 +501,10 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Bienvenido, {{ currentUser?.firstName }}</h2>
         <p class="text-gray-600 mb-6">Selecciona una opción del menú para comenzar.</p>
         
-        <!-- Demo Section -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md">
-          <h3 class="text-lg font-semibold text-blue-800 mb-2">Demo: Ver Funcionalidad</h3>
-          <p class="text-blue-600 mb-3">Haz clic para simular entrenamientos creados por un entrenador.</p>
-          <button 
-            (click)="simulateCoachCreatedTrainings()"
-            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
-            Simular Entrenamientos
-          </button>
+        <!-- Información del sistema -->
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 max-w-md">
+          <h3 class="text-lg font-semibold text-green-800 mb-2">✅ Sistema Conectado</h3>
+          <p class="text-green-600">Tus entrenamientos se cargan automáticamente desde el calendario del entrenador.</p>
         </div>
       </div>
 
@@ -200,7 +578,7 @@
           <div class="text-6xl mb-4">📅</div>
           <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay entrenamientos programados</h3>
           <p class="text-gray-500 max-w-md mx-auto">
-            Los entrenamientos aparecerán aquí cuando un entrenador los programe para el equipo.
+            Los entrenamientos aparecerán aquí cuando el entrenador los programe para el equipo.
           </p>
         </div>
 
@@ -211,8 +589,9 @@
             <div class="flex justify-between items-start">
               <div class="flex-1">
                 <h3 class="font-semibold text-gray-800 text-lg mb-1">{{ training.title }}</h3>
-                <p class="text-gray-600 mb-1">{{ training.date }}</p>
+                <p class="text-gray-600 mb-1">{{ training.dateFormatted }}</p>
                 <p class="text-sm text-gray-500">Entrenador: {{ training.coach }}</p>
+                <p class="text-sm text-gray-500">Tipo: {{ training.type }}</p>
               </div>
               <span [class]="training.statusClass + ' text-white px-3 py-1 rounded-full text-sm font-medium'">
                 {{ training.status }}
@@ -222,11 +601,11 @@
         </div>
       </div>
 
-                     <!-- Stats View -->
+      <!-- Stats View -->
       <div *ngIf="currentView === 'stats'" class="fade-in">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Mis Estadísticas</h2>
         
-        <!-- Stats con mismo ancho que Rendimiento por Mes -->
+        <!-- Stats principales -->
         <div class="grid grid-cols-3 gap-4 mb-6">
           <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4 rounded-xl text-white text-center">
             <h3 class="text-sm font-semibold mb-2">Partidos ⚽</h3>
@@ -244,6 +623,40 @@
           </div>
         </div>
 
+        <!-- Rendimiento del jugador -->
+        <div *ngIf="playerPerformance" class="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Mi Rendimiento</h3>
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm font-medium text-gray-700">Resistencia</span>
+                <span class="text-sm font-medium text-gray-700">{{ (playerPerformance.endurance * 20) | number:'1.0-0' }}%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-green-500 h-2 rounded-full" [style.width.%]="playerPerformance.endurance * 20"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm font-medium text-gray-700">Técnica</span>
+                <span class="text-sm font-medium text-gray-700">{{ (playerPerformance.technique * 20) | number:'1.0-0' }}%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-500 h-2 rounded-full" [style.width.%]="playerPerformance.technique * 20"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm font-medium text-gray-700">Actitud</span>
+                <span class="text-sm font-medium text-gray-700">{{ (playerPerformance.attitude * 20) | number:'1.0-0' }}%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-yellow-500 h-2 rounded-full" [style.width.%]="playerPerformance.attitude * 20"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-white border border-gray-200 rounded-xl p-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-4">Rendimiento por Mes</h3>
           <div class="text-center text-gray-500 py-12">
@@ -253,8 +666,6 @@
           </div>
         </div>
       </div>
-      
-
     </div>
   </div>
 
@@ -270,38 +681,189 @@
   </button>
 </div>
 
-<!-- Calendar Sidebar -->
+<!-- Calendar Sidebar - Igual que el entrenador -->
 <div [class.hidden]="!calendarVisible" 
      class="fixed left-0 top-0 h-full w-80 bg-white shadow-2xl z-50 overflow-y-auto transition-transform duration-300"
      [class.translate-x-0]="calendarVisible"
      [class.-translate-x-full]="!calendarVisible">
-  <div class="p-6">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-bold text-gray-800">📅 Calendario</h2>
-      <button (click)="toggleCalendar()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+  <div class="p-0">
+    <!-- Header con gradiente - MÁS COMPACTO -->
+    <div class="calendar-header">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-bold">📅 Mi Calendario</h2>
+        <button (click)="toggleCalendar()" class="calendar-close-btn">
+          ×
+        </button>
+      </div>
+
+      <!-- Selector de Mes Mejorado -->
+      <div class="flex justify-between items-center">
+        <button (click)="previousMonth()" class="month-nav-btn text-white bg-white bg-opacity-20 hover:bg-opacity-30">
+          ‹
+        </button>
+        <h3 class="calendar-month">{{ currentMonth }}</h3>
+        <button (click)="nextMonth()" class="month-nav-btn text-white bg-white bg-opacity-20 hover:bg-opacity-30">
+          ›
+        </button>
+      </div>
     </div>
-    <div class="text-center py-8">
-      <div class="text-4xl mb-4">🗓️</div>
-      <p class="text-gray-500">Funcionalidad de calendario en desarrollo</p>
+
+    <div class="p-4">
+      <!-- Días de la semana mejorados -->
+      <div class="calendar-grid mb-2">
+        <div class="week-day">D</div>
+        <div class="week-day">L</div>
+        <div class="week-day">M</div>
+        <div class="week-day">M</div>
+        <div class="week-day">J</div>
+        <div class="week-day">V</div>
+        <div class="week-day">S</div>
+      </div>
+
+      <!-- Días del calendario mejorados - ALINEACIÓN PERFECTA -->
+      <div class="calendar-grid">
+        <div *ngFor="let day of calendarDays" 
+             [class]="getDayClass(day)"
+             (click)="selectDate(day)"
+             class="calendar-day">
+          {{ day.date.getDate() }}
+          <div *ngIf="hasEvent(day.date)" 
+               [class]="'event-dot ' + getEventDotClass(day.date)"></div>
+        </div>
+      </div>
+
+      <!-- Próximo evento -->
+      <div *ngIf="nextEvent" class="mt-6 p-4 bg-blue-50 rounded-lg">
+        <h4 class="font-semibold text-blue-800 mb-2">Próximo Entrenamiento</h4>
+        <p class="text-sm text-blue-700">{{ nextEvent.title }}</p>
+        <p class="text-xs text-blue-600">{{ nextEvent.date | date:'dd/MM/yyyy' }} - {{ nextEvent.time }}</p>
+      </div>
+
+      <!-- Eventos del día seleccionado mejorados -->
+      <div class="mt-6 border-t pt-4">
+        <h4 class="font-semibold text-gray-800 mb-3 text-sm">
+          Eventos - {{ selectedDate ? (selectedDate | date:'dd/MM/yyyy') : 'Hoy' }}
+        </h4>
+        <div class="space-y-2 max-h-60 overflow-y-auto">
+          <div *ngFor="let event of getDayEvents()" 
+               [class]="'event-item ' + getEventItemClass(event.type)">
+            <div class="font-medium text-sm">{{ event.title }}</div>
+            <div class="text-xs opacity-75 mt-1">{{ event.time }}</div>
+            <div *ngIf="event.description" class="text-xs mt-1 text-opacity-90">{{ event.description }}</div>
+          </div>
+          <div *ngIf="getDayEvents().length === 0" class="text-gray-500 text-sm text-center py-4">
+            No hay eventos para este día
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Chat Sidebar -->
+<!-- Chat Sidebar - Mismo diseño que el entrenador -->
 <div [class.hidden]="!chatVisible" 
      class="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300"
      [class.translate-x-0]="chatVisible"
      [class.translate-x-full]="!chatVisible">
   <div class="p-4 border-b bg-green-600 text-white">
     <div class="flex justify-between items-center">
-      <h2 class="text-lg font-bold">💬 Chat del Equipo</h2>
+      <h2 class="text-lg font-bold">💬 Chat General</h2>
       <button (click)="toggleChat()" class="text-white hover:text-gray-200 text-2xl">×</button>
     </div>
   </div>
-  <div class="flex-1 p-4">
-    <div class="text-center py-8">
-      <div class="text-4xl mb-4">💬</div>
-      <p class="text-gray-500">Funcionalidad de chat en desarrollo</p>
+  
+  <!-- Área de mensajes -->
+  <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+    <!-- Mensaje cuando no hay mensajes -->
+    <div *ngIf="chatMessages.length === 0" class="text-center text-gray-500 py-8">
+      <div class="text-4xl mb-2">💬</div>
+      <p class="font-medium">No hay mensajes aún</p>
+      <p class="text-sm mt-1">Sé el primero en enviar un mensaje</p>
     </div>
+
+    <!-- Lista de mensajes -->
+    <div *ngFor="let message of chatMessages" 
+         class="flex"
+         [class.justify-end]="isOwnMessage(message)" 
+         [class.justify-start]="!isOwnMessage(message)">
+      
+      <!-- Mensaje de OTROS usuarios -->
+      <div *ngIf="!isOwnMessage(message)" class="flex items-start space-x-3 max-w-xs">
+        <!-- Avatar -->
+        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+          {{ getAvatarInitials(message.sender) }}
+        </div>
+        <!-- Contenido del mensaje -->
+        <div class="bg-white border border-gray-300 rounded-2xl p-4 shadow-sm">
+          <!-- Información del remitente -->
+          <div class="flex items-center space-x-2 mb-2">
+            <span class="font-semibold text-sm text-gray-900">
+              {{ message.sender.firstName }} {{ message.sender.lastName }}
+            </span>
+            <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full capitalize font-medium">
+              {{ message.sender.role.toLowerCase() }}
+            </span>
+          </div>
+          <!-- Texto del mensaje -->
+          <div class="text-sm text-gray-800 break-words leading-relaxed">{{ message.content }}</div>
+          <!-- Hora -->
+          <div class="text-xs text-gray-500 mt-2">{{ formatMessageTime(message.createdAt) }}</div>
+        </div>
+      </div>
+      
+      <!-- Mensaje PROPIO (Jugador) -->
+      <div *ngIf="isOwnMessage(message)" class="flex flex-col items-end max-w-xs">
+        <!-- Información del remitente (tú) -->
+        <div class="flex items-center space-x-2 mb-1 px-2">
+          <span class="text-xs text-gray-600 font-medium">Tú</span>
+          <span class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full capitalize font-medium">
+            {{ currentUser?.role?.toLowerCase() }}
+          </span>
+        </div>
+        <!-- Contenido del mensaje -->
+        <div class="bg-green-600 text-white rounded-2xl p-4 shadow-sm">
+          <!-- Texto del mensaje -->
+          <div class="text-sm break-words leading-relaxed">{{ message.content }}</div>
+          <!-- Hora y estado -->
+          <div class="text-xs text-green-200 mt-2 flex justify-between items-center">
+            <span>{{ formatMessageTime(message.createdAt) }}</span>
+            <span class="text-xs ml-2">✓✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Área de escritura - MEJORADA -->
+  <div class="p-4 border-t bg-white border-gray-200">
+    <div class="flex flex-col space-y-3">
+      <!-- Input de texto -->
+      <div class="relative">
+        <input 
+          type="text" 
+          [(ngModel)]="newMessage"
+          (keydown.enter)="sendMessage()"
+          placeholder="Escribe tu mensaje aquí..." 
+          class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition duration-200 text-gray-900 bg-white text-base placeholder-gray-500"
+          [class.border-red-400]="!newMessage.trim()">
+        
+        <!-- Indicador de texto visible -->
+        <div *ngIf="newMessage" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500 bg-white px-1">
+          {{ newMessage.length }}/500
+        </div>
+      </div>
+      
+      <!-- Botón enviar -->
+      <button 
+        (click)="sendMessage()" 
+        [disabled]="!newMessage.trim()"
+        class="w-full bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold text-base">
+        Enviar Mensaje
+      </button>
+    </div>
+    
+    <p class="text-xs text-gray-500 mt-3 text-center">
+      💡 Presiona Enter para enviar rápidamente
+    </p>
   </div>
 </div>
