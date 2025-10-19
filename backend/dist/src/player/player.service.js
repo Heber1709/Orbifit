@@ -83,8 +83,22 @@ let PlayerService = PlayerService_1 = class PlayerService {
                     }
                 }
             });
+            const completedTrainings = await this.prisma.training.count({
+                where: {
+                    participants: {
+                        some: {
+                            playerId: playerId
+                        }
+                    },
+                    date: {
+                        lt: new Date()
+                    }
+                }
+            });
             return {
-                matchesPlayed: trainingsCount,
+                trainingsCompleted: completedTrainings,
+                totalTrainings: trainingsCount,
+                matchesPlayed: completedTrainings,
                 goals: 0,
                 assists: 0,
                 nextMatch: 'Por programar'
@@ -93,6 +107,8 @@ let PlayerService = PlayerService_1 = class PlayerService {
         catch (error) {
             this.logger.error(`❌ Error obteniendo estadísticas: ${error.message}`);
             return {
+                trainingsCompleted: 0,
+                totalTrainings: 0,
                 matchesPlayed: 0,
                 goals: 0,
                 assists: 0,

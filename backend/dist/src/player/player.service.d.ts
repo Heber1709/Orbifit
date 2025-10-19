@@ -34,6 +34,8 @@ export declare class PlayerService {
         coachId: number;
     })[]>;
     getPlayerStats(playerId: number): Promise<{
+        trainingsCompleted: number;
+        totalTrainings: number;
         matchesPlayed: number;
         goals: number;
         assists: number;

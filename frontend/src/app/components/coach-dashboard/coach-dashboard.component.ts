@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { TrainingService, TrainingResults, PlayerResult } from '../../services/training.service';
 import { ChatService } from '../../services/chat.service';
+import { TournamentService, Tournament } from '../../services/tournament.service';
 
 type ViewType = 'welcome' | 'profile' | 'schedule' | 'record' | 'teamstats';
 
@@ -50,6 +51,7 @@ interface CalendarDay {
   isCurrentMonth: boolean;
   isToday: boolean;
   isSelected: boolean;
+  hasEvents: boolean; // 🆕 AGREGAR PARA CONTROLAR PUNTOS
 }
 
 interface CalendarEvent {
@@ -59,6 +61,8 @@ interface CalendarEvent {
   type: string;
   description?: string;
   originalTraining?: any;
+  eventType: 'training' | 'tournament';
+  originalTournament?: any;
 }
 
 @Component({
@@ -127,6 +131,15 @@ export class CoachDashboardComponent implements OnInit {
 
   nextEvent: any = null;
 
+  // VARIABLES PARA TORNEOS
+  tournaments: Tournament[] = [];
+  tournamentStats = {
+    totalTournaments: 0,
+    activeTournaments: 0,
+    scheduledTournaments: 0,
+    finishedTournaments: 0
+  };
+
   // Chat - Solo general
   teamMembers: any[] = [];
   chatMessages: any[] = [];
@@ -135,6 +148,7 @@ export class CoachDashboardComponent implements OnInit {
   constructor(
     private authService: AuthService,
     public trainingService: TrainingService,
+    private tournamentService: TournamentService,
     private router: Router,
     private chatService: ChatService
   ) {}
@@ -149,10 +163,43 @@ export class CoachDashboardComponent implements OnInit {
     this.loadUserProfile();
     this.loadTeamPlayers();
     this.loadTeamStats();
+    
+    // 🛠️ CORREGIDO: Inicializar calendario limpio
+    this.calendarEvents = {};
     this.generateCalendar();
+    
+    // Cargar datos en orden
     this.loadTrainingsFromDatabase();
+    this.loadTournaments();
     this.updateNextEvent();
     this.loadTeamMembers();
+  }
+
+  // 🛠️ MÉTODO CORREGIDO PARA CARGAR EVENTOS DEL CALENDARIO
+  loadCalendarData() {
+    console.log('🔄 Cargando datos del calendario...');
+    
+    // Limpiar eventos existentes
+    this.calendarEvents = {};
+    
+    // Procesar entrenamientos
+    this.processTrainingsForCalendar(this.availableTrainings);
+    
+    // Procesar torneos
+    this.processTournamentsForCalendar(this.tournaments);
+    
+    console.log('📅 Eventos totales en calendario:', this.getTotalEventsCount());
+    this.generateCalendar();
+    this.updateNextEvent();
+  }
+
+  // 🛠️ MÉTODO PARA CONTAR EVENTOS TOTALES
+  getTotalEventsCount(): number {
+    let count = 0;
+    Object.keys(this.calendarEvents).forEach(dateStr => {
+      count += this.calendarEvents[dateStr].length;
+    });
+    return count;
   }
 
   loadUserProfile() {
@@ -181,6 +228,38 @@ export class CoachDashboardComponent implements OnInit {
           phone: this.currentUser.phone || ''
         };
         this.loading = false;
+      }
+    });
+  }
+
+  // MÉTODO CORREGIDO PARA CARGAR TORNEOS
+  loadTournaments() {
+    console.log('🔄 Cargando torneos para coach...');
+    this.tournamentService.getAllTournaments().subscribe({
+      next: (tournaments: Tournament[]) => {
+        this.tournaments = tournaments;
+        console.log('✅ Torneos cargados para coach:', tournaments.length);
+        this.loadTournamentStats();
+        
+        // 🛠️ CORREGIDO: Procesar torneos y actualizar calendario
+        this.processTournamentsForCalendar(tournaments);
+        this.generateCalendar();
+      },
+      error: (error: any) => {
+        console.error('❌ Error cargando torneos:', error);
+        this.tournaments = [];
+      }
+    });
+  }
+
+  loadTournamentStats() {
+    this.tournamentService.getTournamentStats().subscribe({
+      next: (stats: any) => {
+        this.tournamentStats = stats;
+        console.log('📊 Estadísticas de torneos cargadas:', stats);
+      },
+      error: (error: any) => {
+        console.error('Error cargando estadísticas de torneos:', error);
       }
     });
   }
@@ -314,16 +393,20 @@ export class CoachDashboardComponent implements OnInit {
     return score / 3;
   }
 
+  // 🛠️ MÉTODO CORREGIDO PARA CARGAR ENTRENAMIENTOS
   loadTrainingsFromDatabase() {
     this.loading = true;
     
     this.trainingService.getCoachTrainings().subscribe({
       next: (trainings: any[]) => {
-        console.log('✅ Entrenamientos cargados:', trainings);
+        console.log('✅ Entrenamientos cargados:', trainings.length);
         this.availableTrainings = trainings;
+        
+        // 🛠️ CORREGIDO: Procesar entrenamientos y actualizar calendario
         this.processTrainingsForCalendar(trainings);
-        this.loading = false;
         this.generateCalendar();
+        
+        this.loading = false;
         this.updateNextEvent();
         this.loadTeamStats();
       },
@@ -335,45 +418,170 @@ export class CoachDashboardComponent implements OnInit {
     });
   }
 
+  // 🛠️ MÉTODO CORREGIDO PARA PROCESAR ENTRENAMIENTOS
   processTrainingsForCalendar(trainings: any[]) {
-    this.calendarEvents = {};
-
+    console.log('🔄 Procesando entrenamientos para calendario:', trainings.length);
+    
     trainings.forEach(training => {
-        // CORRECCIÓN: Usar la fecha directamente sin conversiones que causen desplazamiento
+      try {
         const trainingDate = new Date(training.date);
+        if (isNaN(trainingDate.getTime())) {
+          console.error('❌ Fecha inválida en entrenamiento:', training);
+          return;
+        }
         
-        // Usar nuestra función corregida para formatear
         const dateStr = this.formatDateForCalendar(trainingDate);
         const timeStr = trainingDate.toLocaleTimeString('es-ES', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
+          hour: '2-digit', 
+          minute: '2-digit' 
         });
 
         const calendarEvent: CalendarEvent = {
-            id: training.id,
-            title: training.title,
-            time: timeStr,
-            type: training.type,
-            description: training.description,
-            originalTraining: training
+          id: training.id,
+          title: training.title || `${training.type} - ${dateStr}`,
+          time: timeStr,
+          type: training.type,
+          description: training.description,
+          originalTraining: training,
+          eventType: 'training'
         };
 
         if (!this.calendarEvents[dateStr]) {
-            this.calendarEvents[dateStr] = [];
+          this.calendarEvents[dateStr] = [];
         }
 
-        this.calendarEvents[dateStr].push(calendarEvent);
-        
-        console.log('📅 Evento procesado:', {
-            fechaOriginal: training.date,
-            fechaProcesada: dateStr,
-            hora: timeStr,
-            titulo: training.title
-        });
-    });
+        // 🛠️ VERIFICAR DUPLICADOS ANTES DE AGREGAR
+        const eventExists = this.calendarEvents[dateStr].some(existingEvent => 
+          existingEvent.id === calendarEvent.id && 
+          existingEvent.eventType === 'training'
+        );
 
-    console.log('📊 Eventos del calendario procesados:', this.calendarEvents);
-}
+        if (!eventExists) {
+          this.calendarEvents[dateStr].push(calendarEvent);
+          console.log('📅 Evento de entrenamiento agregado:', {
+            fecha: dateStr,
+            hora: timeStr,
+            titulo: calendarEvent.title
+          });
+        } else {
+          console.log('⚠️ Evento de entrenamiento duplicado, omitiendo:', calendarEvent.title);
+        }
+      } catch (error) {
+        console.error('❌ Error procesando entrenamiento:', training, error);
+      }
+    });
+    
+    console.log('✅ Entrenamientos procesados para calendario');
+  }
+
+  // 🛠️ MÉTODO CORREGIDO PARA PROCESAR TORNEOS
+  processTournamentsForCalendar(tournaments: Tournament[]) {
+    console.log('🔄 Procesando torneos para calendario del coach:', tournaments.length);
+    
+    tournaments.forEach((tournament: Tournament) => {
+      try {
+        const startDate = new Date(tournament.startDate);
+        if (isNaN(startDate.getTime())) {
+          console.error('❌ Fecha inválida en torneo:', tournament);
+          return;
+        }
+        
+        const dateStr = this.formatDateForCalendar(startDate);
+        
+        const teamsInfo = tournament.teamsCount > 0 ? ` (${tournament.teamsCount} equipos)` : '';
+        const description = tournament.description ? 
+          `${tournament.description}${teamsInfo}` : 
+          `Torneo${teamsInfo}`;
+
+        const calendarEvent: CalendarEvent = {
+          id: tournament.id,
+          title: `🏆 ${tournament.name}`,
+          time: 'Todo el día',
+          type: 'TORNEO',
+          description: description,
+          eventType: 'tournament',
+          originalTournament: tournament
+        };
+
+        if (!this.calendarEvents[dateStr]) {
+          this.calendarEvents[dateStr] = [];
+        }
+
+        // 🛠️ VERIFICAR DUPLICADOS ANTES DE AGREGAR
+        const eventExists = this.calendarEvents[dateStr].some(existingEvent => 
+          existingEvent.id === calendarEvent.id && 
+          existingEvent.eventType === 'tournament'
+        );
+
+        if (!eventExists) {
+          this.calendarEvents[dateStr].push(calendarEvent);
+          console.log(`📅 Torneo agregado al calendario: ${tournament.name} en ${dateStr}`);
+        } else {
+          console.log('⚠️ Torneo duplicado, omitiendo:', tournament.name);
+        }
+
+        // Si el torneo tiene fecha de fin, agregar eventos para cada día intermedio
+        if (tournament.endDate) {
+          const endDate = new Date(tournament.endDate);
+          if (!isNaN(endDate.getTime())) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(currentDate.getDate() + 1);
+
+            while (currentDate < endDate) {
+              const currentDateStr = this.formatDateForCalendar(new Date(currentDate));
+              if (!this.calendarEvents[currentDateStr]) {
+                this.calendarEvents[currentDateStr] = [];
+              }
+              
+              const dayEvent = {
+                ...calendarEvent,
+                title: `🏆 ${tournament.name} (En curso)`,
+                description: `Día ${Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1} - ${description}`
+              };
+
+              const dayEventExists = this.calendarEvents[currentDateStr].some(existingEvent => 
+                existingEvent.id === dayEvent.id && 
+                existingEvent.eventType === 'tournament' &&
+                existingEvent.title === dayEvent.title
+              );
+
+              if (!dayEventExists) {
+                this.calendarEvents[currentDateStr].push(dayEvent);
+              }
+              
+              currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            // Agregar el último día también
+            const endDateStr = this.formatDateForCalendar(endDate);
+            if (!this.calendarEvents[endDateStr]) {
+              this.calendarEvents[endDateStr] = [];
+            }
+            
+            const finalEvent = {
+              ...calendarEvent,
+              title: `🏆 ${tournament.name} (Final)`,
+              description: `Último día - ${description}`
+            };
+
+            const finalEventExists = this.calendarEvents[endDateStr].some(existingEvent => 
+              existingEvent.id === finalEvent.id && 
+              existingEvent.eventType === 'tournament' &&
+              existingEvent.title === finalEvent.title
+            );
+
+            if (!finalEventExists) {
+              this.calendarEvents[endDateStr].push(finalEvent);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error procesando torneo para coach:', tournament, error);
+      }
+    });
+    
+    console.log('✅ Torneos procesados para calendario del coach');
+  }
 
   updateNextEvent() {
     const now = new Date();
@@ -382,9 +590,9 @@ export class CoachDashboardComponent implements OnInit {
     Object.keys(this.calendarEvents).forEach(dateStr => {
       const events = this.calendarEvents[dateStr];
       events.forEach(event => {
-        const eventDate = new Date(dateStr + 'T' + event.time);
+        const eventDate = new Date(dateStr + 'T' + (event.time !== 'Todo el día' ? event.time : '12:00'));
         if (eventDate >= now) {
-          if (!nextEvent || eventDate < new Date(nextEvent.date + 'T' + nextEvent.time)) {
+          if (!nextEvent || eventDate < new Date(nextEvent.date + 'T' + (nextEvent.time !== 'Todo el día' ? nextEvent.time : '12:00'))) {
             nextEvent = {
               ...event,
               date: dateStr,
@@ -400,7 +608,7 @@ export class CoachDashboardComponent implements OnInit {
 
   formatDate(date: Date): string {
     return this.formatDateForCalendar(date);
-}
+  }
 
   showWelcome() {
     this.currentView = 'welcome';
@@ -431,19 +639,20 @@ export class CoachDashboardComponent implements OnInit {
     this.calendarVisible = !this.calendarVisible;
     if (this.calendarVisible) {
       this.chatVisible = false;
-      this.loadTrainingsFromDatabase();
+      // 🛠️ CORREGIDO: Recargar datos sin duplicar
+      this.loadCalendarData();
     }
   }
 
- toggleChat() {
-  this.chatVisible = !this.chatVisible;
-  if (this.chatVisible) {
-    this.calendarVisible = false;
-    console.log('💬 Abriendo chat...');
-    this.loadGeneralMessages();
-    this.loadTeamMembers();
+  toggleChat() {
+    this.chatVisible = !this.chatVisible;
+    if (this.chatVisible) {
+      this.calendarVisible = false;
+      console.log('💬 Abriendo chat...');
+      this.loadGeneralMessages();
+      this.loadTeamMembers();
+    }
   }
-}
 
   updateCoachProfile() {
     this.loading = true;
@@ -500,16 +709,14 @@ export class CoachDashboardComponent implements OnInit {
       return;
     }
 
-    // CORRECCIÓN: Crear fecha correctamente sin problemas de timezone
     const localDate = new Date(this.newTraining.date + 'T' + this.newTraining.time);
-    // Ajustar para UTC para evitar el desplazamiento
     const utcDate = new Date(localDate.getTime() - (localDate.getTimezoneOffset() * 60000));
 
     const trainingData = {
       title: `${this.newTraining.type} - ${this.newTraining.date}`,
       description: this.newTraining.description,
       type: this.mapTrainingType(this.newTraining.type),
-      date: utcDate.toISOString(), // Usar fecha UTC
+      date: utcDate.toISOString(),
       duration: parseInt(this.newTraining.duration.toString()),
       playerIds: selectedPlayers,
       coachId: this.currentUser.id
@@ -557,16 +764,14 @@ export class CoachDashboardComponent implements OnInit {
         }
       });
     }
-}
+  }
 
-formatDateForCalendar(date: Date): string {
-    // Usar métodos locales para evitar problemas de timezone
+  formatDateForCalendar(date: Date): string {
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
-    
     return `${year}-${month}-${day}`;
-}
+  }
 
   private mapTrainingType(frontendType: string): string {
     const typeMap: { [key: string]: string } = {
@@ -649,6 +854,7 @@ formatDateForCalendar(date: Date): string {
     this.editingTrainingId = null;
   }
 
+  // 🛠️ MÉTODO CORREGIDO PARA GENERAR CALENDARIO
   generateCalendar() {
     const now = new Date();
     const year = now.getFullYear();
@@ -660,7 +866,6 @@ formatDateForCalendar(date: Date): string {
     });
     
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
     
@@ -670,13 +875,20 @@ formatDateForCalendar(date: Date): string {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       
+      const dateStr = this.formatDateForCalendar(date);
+      const hasEvents = this.calendarEvents[dateStr] && this.calendarEvents[dateStr].length > 0;
+      
       this.calendarDays.push({
         date: date,
         isCurrentMonth: date.getMonth() === month,
         isToday: this.isToday(date),
-        isSelected: this.selectedDate && this.isSameDay(date, this.selectedDate)
+        isSelected: this.selectedDate && this.isSameDay(date, this.selectedDate),
+        hasEvents: hasEvents // 🆕 AGREGAR INFORMACIÓN DE EVENTOS
       });
     }
+    
+    console.log('📅 Calendario generado para:', this.currentMonth);
+    console.log('📅 Días con eventos:', this.calendarDays.filter(day => day.hasEvents).length);
   }
 
   isToday(date: Date): boolean {
@@ -701,36 +913,45 @@ formatDateForCalendar(date: Date): string {
       classes += 'selected ';
     }
     
+    // 🆕 AGREGAR CLASE SI TIENE EVENTOS
+    if (day.hasEvents) {
+      classes += 'has-events ';
+    }
+    
     return classes;
   }
 
+  // 🛠️ MÉTODO CORREGIDO PARA PUNTOS DE EVENTOS
   getEventDotClass(date: Date): string {
     const events = this.getEventsForDate(date);
     if (events.length > 0) {
-      const eventType = events[0].type;
-      return this.mapEventTypeToClass(eventType);
+      const hasTournament = events.some(event => event.eventType === 'tournament');
+      const hasTraining = events.some(event => event.eventType === 'training');
+      
+      if (hasTournament && hasTraining) return 'event-dot event-dot-mixed';
+      if (hasTournament) return 'event-dot event-dot-tournament';
+      if (hasTraining) return 'event-dot event-dot-training';
     }
     return '';
   }
 
-  mapEventTypeToClass(eventType: string): string {
-    const typeMap: { [key: string]: string } = {
-      'FISICO': 'training',
-      'TACTICO': 'meeting',
-      'TECNICO': 'training',
-      'PRACTICA': 'match'
-    };
-    return typeMap[eventType] || 'training';
-  }
-
-  getEventItemClass(eventType: string): string {
+  getEventItemClass(event: CalendarEvent): string {
     const classMap: { [key: string]: string } = {
+      'training': 'event-training',
+      'tournament': 'event-tournament',
       'FISICO': 'event-training',
       'TACTICO': 'event-meeting',
       'TECNICO': 'event-training',
-      'PRACTICA': 'event-match'
+      'PRACTICA': 'event-match',
+      'TORNEO': 'event-tournament'
     };
-    return classMap[eventType] || 'event-training';
+    
+    // Priorizar eventType si está disponible
+    if (event.eventType) {
+      return 'event-item ' + (classMap[event.eventType] || 'event-training');
+    }
+    
+    return 'event-item ' + (classMap[event.type] || 'event-training');
   }
 
   selectDate(day: CalendarDay) {
@@ -738,19 +959,26 @@ formatDateForCalendar(date: Date): string {
     this.generateCalendar();
   }
 
+  // 🛠️ MÉTODO CORREGIDO PARA VERIFICAR EVENTOS
   hasEvent(date: Date): boolean {
     const dateStr = this.formatDate(date);
-    return this.calendarEvents[dateStr] && this.calendarEvents[dateStr].length > 0;
+    const hasEvents = this.calendarEvents[dateStr] && this.calendarEvents[dateStr].length > 0;
+    console.log(`🔍 Verificando eventos para ${dateStr}:`, hasEvents);
+    return hasEvents;
   }
 
   getEventsForDate(date: Date): CalendarEvent[] {
     const dateStr = this.formatDate(date);
-    return this.calendarEvents[dateStr] || [];
+    const events = this.calendarEvents[dateStr] || [];
+    console.log(`📅 Eventos para ${dateStr}:`, events.length);
+    return events;
   }
 
   getDayEvents(): CalendarEvent[] {
     if (!this.selectedDate) return [];
-    return this.getEventsForDate(this.selectedDate);
+    const events = this.getEventsForDate(this.selectedDate);
+    console.log(`📋 Eventos del día seleccionado:`, events.length);
+    return events;
   }
 
   previousMonth() {
@@ -772,7 +1000,6 @@ formatDateForCalendar(date: Date): string {
     });
     
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
     
@@ -782,11 +1009,15 @@ formatDateForCalendar(date: Date): string {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       
+      const dateStr = this.formatDateForCalendar(date);
+      const hasEvents = this.calendarEvents[dateStr] && this.calendarEvents[dateStr].length > 0;
+      
       this.calendarDays.push({
         date: date,
         isCurrentMonth: date.getMonth() === month,
         isToday: this.isToday(date),
-        isSelected: this.selectedDate && this.isSameDay(date, this.selectedDate)
+        isSelected: this.selectedDate && this.isSameDay(date, this.selectedDate),
+        hasEvents: hasEvents
       });
     }
   }
@@ -1062,92 +1293,92 @@ formatDateForCalendar(date: Date): string {
 
   // Chat Methods - Solo general
   loadTeamMembers() {
-  this.chatService.getTeamMembers().subscribe({
-    next: (members) => {
-      console.log('👥 Miembros del equipo cargados:', members);
-      this.teamMembers = members;
-    },
-    error: (error) => {
-      console.error('Error cargando miembros del equipo:', error);
-      this.teamMembers = [];
-    }
-  });
-}
-
+    this.chatService.getTeamMembers().subscribe({
+      next: (members) => {
+        console.log('👥 Miembros del equipo cargados:', members);
+        this.teamMembers = members;
+      },
+      error: (error) => {
+        console.error('Error cargando miembros del equipo:', error);
+        this.teamMembers = [];
+      }
+    });
+  }
 
   loadGeneralMessages() {
-  console.log('📥 Cargando mensajes...');
-  this.chatService.getGeneralMessages().subscribe({
-    next: (messages) => {
-      console.log('💬 Mensajes cargados:', messages);
-      this.chatMessages = messages;
-    },
-    error: (error) => {
-      console.error('Error cargando mensajes generales:', error);
-      this.chatMessages = [];
-    }
-  });
-}
+    console.log('📥 Cargando mensajes...');
+    this.chatService.getGeneralMessages().subscribe({
+      next: (messages) => {
+        console.log('💬 Mensajes cargados:', messages);
+        this.chatMessages = messages;
+      },
+      error: (error) => {
+        console.error('Error cargando mensajes generales:', error);
+        this.chatMessages = [];
+      }
+    });
+  }
 
   sendMessage() {
-  if (!this.newMessage.trim()) {
-    alert('Por favor escribe un mensaje');
-    return;
-  }
-
-  console.log('📤 Enviando mensaje:', this.newMessage);
-
-  this.chatService.sendMessage(this.newMessage).subscribe({
-    next: (message) => {
-      console.log('✅ Mensaje enviado:', message);
-      this.chatMessages.push(message);
-      this.newMessage = '';
-      
-      // Forzar actualización de la vista
-      this.chatMessages = [...this.chatMessages];
-    },
-    error: (error) => {
-      console.error('❌ Error enviando mensaje:', error);
-      alert('Error al enviar el mensaje: ' + error.message);
+    if (!this.newMessage.trim()) {
+      alert('Por favor escribe un mensaje');
+      return;
     }
-  });
-}
+
+    console.log('📤 Enviando mensaje:', this.newMessage);
+
+    this.chatService.sendMessage(this.newMessage).subscribe({
+      next: (message) => {
+        console.log('✅ Mensaje enviado:', message);
+        this.chatMessages.push(message);
+        this.newMessage = '';
+        
+        // Forzar actualización de la vista
+        this.chatMessages = [...this.chatMessages];
+      },
+      error: (error) => {
+        console.error('❌ Error enviando mensaje:', error);
+        alert('Error al enviar el mensaje: ' + error.message);
+      }
+    });
+  }
 
   getAvatarInitials(member: any): string {
-  if (!member || !member.firstName || !member.lastName) return '??';
-  return `${member.firstName.charAt(0)}${member.lastName.charAt(0)}`.toUpperCase();
-}
+    if (!member || !member.firstName || !member.lastName) return '??';
+    return `${member.firstName.charAt(0)}${member.lastName.charAt(0)}`.toUpperCase();
+  }
 
   isOwnMessage(message: any): boolean {
-  const isOwn = message.sender.id === this.currentUser.id;
-  console.log('🔍 Verificando mensaje:', {
-    messageSender: message.sender.id,
-    currentUser: this.currentUser.id,
-    isOwn: isOwn,
-    senderName: `${message.sender.firstName} ${message.sender.lastName}`,
-    currentUserName: `${this.currentUser.firstName} ${this.currentUser.lastName}`
-  });
-  return isOwn;
-}
-
-onMessageKeyPress(event: KeyboardEvent) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    this.sendMessage();
-  }
-}
-
-formatMessageTime(dateString: string): string {
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('es-ES', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const isOwn = message.sender.id === this.currentUser.id;
+    console.log('🔍 Verificando mensaje:', {
+      messageSender: message.sender.id,
+      currentUser: this.currentUser.id,
+      isOwn: isOwn,
+      senderName: `${message.sender.firstName} ${message.sender.lastName}`,
+      currentUserName: `${this.currentUser.firstName} ${this.currentUser.lastName}`
     });
-  } catch (error) {
-    return '--:--';
+    return isOwn;
   }
-}
+
+  onMessageKeyPress(event: KeyboardEvent) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+    }
+  }
+
+  formatMessageTime(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('es-ES', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } catch (error) {
+      return '--:--';
+    }
+  }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);

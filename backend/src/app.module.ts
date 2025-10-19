@@ -6,6 +6,9 @@ import { DatabaseModule } from './database/database.module';
 import { CoachModule } from './coach/coach.module';
 import { ChatModule } from './chat/chat.module';
 import { PlayerModule } from './player/player.module';
+import { AdminModule } from './admin/admin.module'; 
+import { TournamentModule } from './tournament/tournament.module';
+
 
 @Module({
   imports: [
@@ -18,6 +21,8 @@ import { PlayerModule } from './player/player.module';
     CoachModule,
     ChatModule,
     PlayerModule,
+    AdminModule, 
+    TournamentModule,
   ],
 })
 export class AppModule {}

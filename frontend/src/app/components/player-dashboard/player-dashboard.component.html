@@ -1,31 +1,36 @@
-<!-- ==== AGREGAR ESTO AL PRINCIPIO DEL ARCHIVO ==== -->
+<!-- ==== CSS ORGANIZADO ==== -->
 <style>
-  /* Fuerzar dimensiones exactas */
+  /* ===== VARIABLES Y RESET ===== */
   .dashboard-container {
     max-width: 1280px;
     margin: 0 auto;
     padding: 1.5rem;
   }
-  
+
+  .min-h-screen {
+    min-height: 100vh;
+  }
+
+  /* ===== COMPONENTES PRINCIPALES ===== */
   .cards-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
     margin-bottom: 2rem;
   }
-  
+
   @media (min-width: 768px) {
     .cards-grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
-  
+
   @media (min-width: 1024px) {
     .cards-grid {
       grid-template-columns: repeat(4, 1fr);
     }
   }
-  
+
   .dashboard-card {
     background: white;
     padding: 1.5rem;
@@ -40,353 +45,382 @@
     flex-direction: column;
     justify-content: space-between;
   }
-  
+
   .dashboard-card:hover {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
   }
-  
+
   .next-match-card {
     background: linear-gradient(135deg, #3b82f6, #2563eb);
     color: white;
     min-height: 140px;
   }
 
-  /* ==== ESTILOS DEL CALENDARIO IGUAL QUE ENTRENADOR ==== */
+  /* ===== CALENDARIO ===== */
   .calendar-header {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-    color: white !important;
-    padding: 1rem 1.5rem !important;
-    margin: -1.5rem -1.5rem 1rem -1.5rem !important;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    padding: 1rem 1.5rem;
+    margin: -1.5rem -1.5rem 1rem -1.5rem;
   }
 
   .calendar-month {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    text-align: center !important;
-    margin: 0 !important;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 0;
   }
 
-  /* Botón de cerrar más pequeño y rojo */
   .calendar-close-btn {
-    background: #ef4444 !important;
-    color: white !important;
-    width: 2rem !important;
-    height: 2rem !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: none !important;
-    cursor: pointer !important;
-    font-size: 1.25rem !important;
-    transition: all 0.2s !important;
+    background: #ef4444;
+    color: white;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: all 0.2s;
   }
 
   .calendar-close-btn:hover {
-    background: #dc2626 !important;
-    transform: scale(1.1) !important;
+    background: #dc2626;
+    transform: scale(1.1);
   }
 
-  /* Botones de navegación del mes más pequeños */
   .month-nav-btn {
-    width: 2rem !important;
-    height: 2rem !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: 1px solid #d1d5db !important;
-    background: white !important;
-    cursor: pointer !important;
-    transition: all 0.2s !important;
-    font-size: 1rem !important;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d1d5db;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
   }
 
   .month-nav-btn:hover {
-    background: #f3f4f6 !important;
-    border-color: #9ca3af !important;
+    background: #f3f4f6;
+    border-color: #9ca3af;
   }
 
-  /* CONTENEDOR DE DÍAS DEL CALENDARIO - MEJORADO */
   .calendar-grid {
-    display: grid !important;
-    grid-template-columns: repeat(7, 1fr) !important;
-    gap: 0.15rem !important;
-    margin-bottom: 1rem !important;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.15rem;
+    margin-bottom: 1rem;
   }
 
-  /* DÍAS DEL CALENDARIO - TAMAÑO FIJO Y PERFECTO */
+  .week-day {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #4b5563;
+    text-align: center;
+    padding: 0.4rem 0;
+    text-transform: uppercase;
+    background: #f8fafc;
+    border-radius: 0.25rem;
+    margin: 0.1rem;
+  }
+
   .calendar-day {
-    width: 2rem !important;
-    height: 2rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 0.375rem !important;
-    cursor: pointer !important;
-    transition: all 0.2s !important;
-    position: relative !important;
-    font-size: 0.75rem !important;
-    font-weight: 500 !important;
-    margin: 0 auto !important;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin: 0 auto;
   }
 
   .calendar-day:hover {
-    background: #3b82f6 !important;
-    color: white !important;
-    transform: scale(1.05) !important;
+    background: #3b82f6;
+    color: white;
+    transform: scale(1.05);
   }
 
   .calendar-day.today {
-    background: #ef4444 !important;
-    color: white !important;
-    font-weight: 600 !important;
-    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3) !important;
+    background: #ef4444;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
   }
 
   .calendar-day.selected {
-    background: #10b981 !important;
-    color: white !important;
-    font-weight: 600 !important;
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3) !important;
+    background: #10b981;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
   }
 
   .calendar-day.other-month {
-    color: #9ca3af !important;
-    background: #f9fafb !important;
+    color: #9ca3af;
+    background: #f9fafb;
   }
 
   .calendar-day.other-month:hover {
-    background: #e5e7eb !important;
-    color: #6b7280 !important;
+    background: #e5e7eb;
+    color: #6b7280;
   }
 
-  /* DÍAS DE LA SEMANA - MEJORADO */
-  .week-day {
-    font-size: 0.7rem !important;
-    font-weight: 600 !important;
-    color: #4b5563 !important;
-    text-align: center !important;
-    padding: 0.4rem 0 !important;
-    text-transform: uppercase !important;
-    background: #f8fafc !important;
-    border-radius: 0.25rem !important;
-    margin: 0.1rem !important;
+  .calendar-day.has-events {
+    background: #f8fafc;
+    font-weight: 600;
+    position: relative;
   }
 
-  /* Indicador de eventos mejorado */
+  .calendar-day.has-events:hover {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .calendar-day.has-events.today {
+    background: #ef4444;
+    color: white;
+  }
+
+  .calendar-day.has-events.selected {
+    background: #10b981;
+    color: white;
+  }
+
+  /* ===== PUNTOS DE EVENTOS EN CALENDARIO ===== */
   .event-dot {
-    position: absolute !important;
-    bottom: 0.1rem !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: 0.25rem !important;
-    height: 0.25rem !important;
-    border-radius: 50% !important;
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    z-index: 10;
+    box-shadow: 0 0 0 2px white;
   }
 
-  .event-dot.training {
-    background: #10b981 !important;
+  .event-dot-training {
+    background: #10b981;
   }
 
-  .event-dot.match {
-    background: #ef4444 !important;
+  .event-dot-tournament {
+    background: #8b5cf6;
   }
 
-  .event-dot.meeting {
-    background: #f59e0b !important;
+  .event-dot-mixed {
+    background: linear-gradient(135deg, #10b981 50%, #8b5cf6 50%);
   }
 
-  /* Eventos del día mejorados */
+  /* ===== EVENTOS EN LISTA ===== */
   .event-item {
-    padding: 0.75rem !important;
-    border-radius: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
-    border-left: 4px solid !important;
-    transition: all 0.2s !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-    position: relative !important;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
   }
 
   .event-item:hover {
-    transform: translateX(2px) !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    transform: translateX(2px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   }
 
   .event-training {
-    background: #f0fdf4 !important;
-    border-left-color: #10b981 !important;
-    color: #065f46 !important;
+    background: #f0fdf4;
+    border-left-color: #10b981;
+    color: #065f46;
   }
 
-  .event-match {
-    background: #fef2f2 !important;
-    border-left-color: #ef4444 !important;
-    color: #991b1b !important;
+  .event-tournament {
+    background: #f3e8ff;
+    border-left-color: #8b5cf6;
+    color: #6b21a8;
   }
 
   .event-meeting {
-    background: #fffbeb !important;
-    border-left-color: #f59e0b !important;
-    color: #92400e !important;
+    background: #fffbeb;
+    border-left-color: #f59e0b;
+    color: #92400e;
   }
 
-  /* BOTONES FLOTANTES FIJOS - CORREGIDOS */
+  .event-match {
+    background: #fef2f2;
+    border-left-color: #ef4444;
+    color: #991b1b;
+  }
+
+  /* ===== BOTONES FLOTANTES ===== */
   .floating-btn {
-    width: 3rem !important;
-    height: 3rem !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1.125rem !important;
-    z-index: 40 !important;
-    border: none !important;
-    cursor: pointer !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-    position: fixed !important;
-    transition: all 0.3s ease !important;
-}
-
-.calendar-sidebar.open ~ .floating-btn.calendar-btn {
-    display: none !important;
-}
-
-.chat-sidebar.open ~ .floating-btn.chat-btn {
-    display: none !important;
-}
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    z-index: 40;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    position: fixed;
+    transition: all 0.3s ease;
+  }
 
   .floating-btn:hover {
-    transform: scale(1.1) !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
-}
+    transform: scale(1.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
 
   .calendar-btn {
-    background: #3b82f6 !important;
-    color: white !important;
-    left: 1.5rem !important;
-    top: 1.5rem !important;  /* CAMBIADO: Ahora está arriba */
-}
+    background: #3b82f6;
+    color: white;
+    left: 1.5rem;
+    top: 1.5rem;
+  }
 
   .calendar-btn:hover {
-    background: #2563eb !important;
-}
-
+    background: #2563eb;
+  }
 
   .chat-btn {
-    background: #10b981 !important;
-    color: white !important;
-    right: 1.5rem !important;
-    bottom: 1.5rem !important;
-}
+    background: #10b981;
+    color: white;
+    right: 1.5rem;
+    bottom: 1.5rem;
+  }
 
-.chat-btn:hover {
-    background: #059669 !important;
-}
+  .chat-btn:hover {
+    background: #059669;
+  }
 
-  /* GRÁFICA DE BARRAS VERTICAL - CORREGIDA */
+  .calendar-sidebar.open ~ .floating-btn.calendar-btn {
+    display: none;
+  }
+
+  .chat-sidebar.open ~ .floating-btn.chat-btn {
+    display: none;
+  }
+
+  /* ===== GRÁFICAS Y ESTADÍSTICAS ===== */
   .bars-container {
-    display: flex !important;
-    align-items: end !important;
-    justify-content: space-between !important;
-    height: 160px !important;
-    padding: 1rem 0 !important;
-    gap: 1rem !important;
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    height: 160px;
+    padding: 1rem 0;
+    gap: 1rem;
   }
 
   .bar-item {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    flex: 1 !important;
-    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    height: 100%;
   }
 
   .bar-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: end !important;
-    height: 100% !important;
-    width: 100% !important;
-    position: relative !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
+    height: 100%;
+    width: 100%;
+    position: relative;
   }
 
   .bar {
-    width: 60% !important;
-    min-height: 20px !important;
-    border-radius: 8px 8px 0 0 !important;
-    transition: all 0.8s ease-in-out !important;
-    display: flex !important;
-    align-items: end !important;
-    justify-content: center !important;
-    position: relative !important;
+    width: 60%;
+    min-height: 20px;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.8s ease-in-out;
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    position: relative;
   }
 
   .bar-resistance {
-    background: linear-gradient(to top, #10b981, #34d399) !important;
+    background: linear-gradient(to top, #10b981, #34d399);
   }
 
   .bar-technique {
-    background: linear-gradient(to top, #3b82f6, #60a5fa) !important;
+    background: linear-gradient(to top, #3b82f6, #60a5fa);
   }
 
   .bar-attitude {
-    background: linear-gradient(to top, #f59e0b, #fbbf24) !important;
+    background: linear-gradient(to top, #f59e0b, #fbbf24);
   }
 
   .bar-value {
-    color: white !important;
-    font-weight: bold !important;
-    font-size: 0.75rem !important;
-    margin-bottom: 0.25rem !important;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
+    color: white;
+    font-weight: bold;
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
   }
 
   .bar-label {
-    margin-top: 0.5rem !important;
-    font-size: 0.875rem !important;
-    font-weight: 600 !important;
-    text-align: center !important;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: center;
   }
 
   .bar-icon {
-    font-size: 1.5rem !important;
-    margin-top: 0.25rem !important;
+    font-size: 1.5rem;
+    margin-top: 0.25rem;
   }
 
+  /* ===== SIDEBARS ===== */
   .sidebar {
-    width: 24rem !important;
-    height: 100vh !important;
-    background: white !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-    z-index: 50 !important;
-    position: fixed !important;
-    top: 0 !important;
-    transition: transform 0.3s ease-in-out !important;
-    overflow-y: auto !important;
+    width: 24rem;
+    height: 100vh;
+    background: white;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    z-index: 50;
+    position: fixed;
+    top: 0;
+    transition: transform 0.3s ease-in-out;
+    overflow-y: auto;
   }
 
   .calendar-sidebar {
-    left: 0 !important;
-    transform: translateX(-100%) !important;
+    left: 0;
+    transform: translateX(-100%);
   }
 
   .calendar-sidebar.open {
-    transform: translateX(0) !important;
+    transform: translateX(0);
   }
 
   .chat-sidebar {
-    right: 0 !important;
-    transform: translateX(100%) !important;
+    right: 0;
+    transform: translateX(100%);
   }
 
   .chat-sidebar.open {
-    transform: translateX(0) !important;
+    transform: translateX(0);
   }
 
+  /* ===== ANIMACIONES ===== */
   .animate-fade-in {
+    animation: fadeIn 0.3s ease-in;
+  }
+
+  .fade-in {
     animation: fadeIn 0.3s ease-in;
   }
 
@@ -400,8 +434,28 @@
       transform: translateY(0); 
     }
   }
+
+  /* ===== UTILIDADES ===== */
+  .bg-gradient-to-br {
+    background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+  }
+
+  .from-blue-900 {
+    --tw-gradient-from: #1e3a8a;
+    --tw-gradient-to: rgb(30 58 138 / 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+
+  .via-blue-800 {
+    --tw-gradient-to: rgb(30 64 175 / 0);
+    --tw-gradient-stops: var(--tw-gradient-from), #1e40af, var(--tw-gradient-to);
+  }
+
+  .to-indigo-900 {
+    --tw-gradient-to: #312e81;
+  }
 </style>
-<!-- ==== FIN DEL CSS TEMPORAL ==== -->
+<!-- ==== FIN DEL CSS ORGANIZADO ==== -->
 
 <!-- Dashboard Jugador -->
 <div class="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900">
@@ -467,7 +521,7 @@
         <!-- Información del sistema -->
         <div class="bg-green-50 border border-green-200 rounded-lg p-4 max-w-md">
           <h3 class="text-lg font-semibold text-green-800 mb-2">✅ Sistema Conectado</h3>
-          <p class="text-green-600">Tus entrenamientos se cargan automáticamente desde el calendario del entrenador.</p>
+          <p class="text-green-600">Tus entrenamientos y torneos se cargan automáticamente desde el calendario del entrenador.</p>
         </div>
       </div>
 
@@ -564,11 +618,11 @@
         </div>
       </div>
 
-      <!-- Stats View CORREGIDA -->
+      <!-- Stats View -->
       <div *ngIf="currentView === 'stats'" class="fade-in">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">Mis Estadísticas</h2>
         
-        <!-- Stats principales MEJORADAS -->
+        <!-- Stats principales -->
         <div class="grid grid-cols-3 gap-4 mb-6">
           <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4 rounded-xl text-white text-center">
             <div class="text-3xl mb-3">📊</div>
@@ -673,12 +727,12 @@
           </div>
         </div>
 
-        <!-- Gráfica de Barras Adicional CORREGIDA -->
+        <!-- Gráfica de Barras Adicional -->
         <div class="bg-white border border-gray-200 rounded-xl p-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-6">📊 Resumen de Métricas</h3>
           
           <div *ngIf="playerPerformance" class="space-y-6">
-            <!-- Gráfica de barras vertical CORREGIDA -->
+            <!-- Gráfica de barras vertical -->
             <div class="bars-container">
               <!-- Resistencia -->
               <div class="bar-item">
@@ -740,7 +794,7 @@
     </div>
   </div>
 
-  <!-- Floating Action Buttons - FUERA DEL CONTENEDOR PRINCIPAL -->
+  <!-- Floating Action Buttons -->
   <button (click)="toggleCalendar()" class="floating-btn calendar-btn">
     📅
   </button>
@@ -753,7 +807,7 @@
 <!-- Calendar Sidebar -->
 <div [class]="'sidebar calendar-sidebar ' + (calendarVisible ? 'open' : '')">
   <div class="p-0">
-    <!-- Header con gradiente - MÁS COMPACTO -->
+    <!-- Header con gradiente -->
     <div class="calendar-header">
       <div class="flex justify-between items-center mb-3">
         <h2 class="text-lg font-bold">📅 Mi Calendario</h2>
@@ -762,7 +816,7 @@
         </button>
       </div>
 
-      <!-- Selector de Mes Mejorado -->
+      <!-- Selector de Mes -->
       <div class="flex justify-between items-center">
         <button (click)="previousMonth()" class="month-nav-btn text-white bg-white bg-opacity-20 hover:bg-opacity-30">
           ‹
@@ -775,7 +829,7 @@
     </div>
 
     <div class="p-4">
-      <!-- Días de la semana mejorados -->
+      <!-- Días de la semana -->
       <div class="calendar-grid mb-2">
         <div class="week-day">D</div>
         <div class="week-day">L</div>
@@ -786,7 +840,7 @@
         <div class="week-day">S</div>
       </div>
 
-      <!-- Días del calendario mejorados - ALINEACIÓN PERFECTA -->
+      <!-- Días del calendario -->
       <div class="calendar-grid">
         <div *ngFor="let day of calendarDays" 
              [class]="getDayClass(day)"
@@ -800,22 +854,30 @@
 
       <!-- Próximo evento -->
       <div *ngIf="nextEvent" class="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h4 class="font-semibold text-blue-800 mb-2">Próximo Entrenamiento</h4>
+        <h4 class="font-semibold text-blue-800 mb-2">Próximo Evento</h4>
         <p class="text-sm text-blue-700">{{ nextEvent.title }}</p>
         <p class="text-xs text-blue-600">{{ nextEvent.date | date:'dd/MM/yyyy' }} - {{ nextEvent.time }}</p>
       </div>
 
-      <!-- Eventos del día seleccionado mejorados -->
+      <!-- Eventos del día seleccionado -->
       <div class="mt-6 border-t pt-4">
         <h4 class="font-semibold text-gray-800 mb-3 text-sm">
           Eventos - {{ selectedDate ? (selectedDate | date:'dd/MM/yyyy') : 'Hoy' }}
         </h4>
         <div class="space-y-2 max-h-60 overflow-y-auto">
           <div *ngFor="let event of getDayEvents()" 
-               [class]="'event-item ' + getEventItemClass(event.type)">
+               [class]="'event-item ' + getEventItemClass(event)">
             <div class="font-medium text-sm">{{ event.title }}</div>
             <div class="text-xs opacity-75 mt-1">{{ event.time }}</div>
             <div *ngIf="event.description" class="text-xs mt-1 text-opacity-90">{{ event.description }}</div>
+            <!-- 🆕 BADGE DE TIPO DE EVENTO -->
+            <div class="text-xs mt-1">
+              <span [class]="event.eventType === 'tournament' ? 
+                            'bg-purple-100 text-purple-800 px-2 py-1 rounded' : 
+                            'bg-green-100 text-green-800 px-2 py-1 rounded'">
+                {{ event.eventType === 'tournament' ? '🏆 Torneo' : '🏋️ Entrenamiento' }}
+              </span>
+            </div>
           </div>
           <div *ngIf="getDayEvents().length === 0" class="text-gray-500 text-sm text-center py-4">
             No hay eventos para este día

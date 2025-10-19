@@ -22,10 +22,12 @@ import { MatNativeDateModule } from '@angular/material/core';
 
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { routes } from './app.routes';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
+    provideHttpClient(withInterceptorsFromDi()),
     importProvidersFrom(
       BrowserModule,
       BrowserAnimationsModule,

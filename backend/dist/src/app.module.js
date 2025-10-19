@@ -15,6 +15,8 @@ const database_module_1 = require("./database/database.module");
 const coach_module_1 = require("./coach/coach.module");
 const chat_module_1 = require("./chat/chat.module");
 const player_module_1 = require("./player/player.module");
+const admin_module_1 = require("./admin/admin.module");
+const tournament_module_1 = require("./tournament/tournament.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -30,6 +32,8 @@ exports.AppModule = AppModule = __decorate([
             coach_module_1.CoachModule,
             chat_module_1.ChatModule,
             player_module_1.PlayerModule,
+            admin_module_1.AdminModule,
+            tournament_module_1.TournamentModule,
         ],
     })
 ], AppModule);

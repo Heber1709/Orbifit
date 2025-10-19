@@ -33,6 +33,8 @@ export declare class PlayerController {
         coachId: number;
     })[]>;
     getPlayerStats(req: any): Promise<{
+        trainingsCompleted: number;
+        totalTrainings: number;
         matchesPlayed: number;
         goals: number;
         assists: number;

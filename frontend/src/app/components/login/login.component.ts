@@ -106,20 +106,28 @@ export class LoginComponent {
   }
 
   private redirectToDashboard(role: string) {
-    switch (role) {
-      case 'JUGADOR':
-        this.router.navigate(['/player']);
-        break;
-      case 'ENTRENADOR':
-        this.router.navigate(['/coach']);
-        break;
-      case 'ADMINISTRADOR':
-        this.router.navigate(['/admin']);
-        break;
-      default:
-        this.router.navigate(['/']);
-    }
+  console.log('🎯 Redirigiendo al dashboard. Rol:', role);
+  
+  switch (role) {
+    case 'JUGADOR':
+      console.log('➡️ Redirigiendo a /player');
+      this.router.navigate(['/player']);
+      break;
+    case 'ENTRENADOR':
+      console.log('➡️ Redirigiendo a /coach');
+      this.router.navigate(['/coach']);
+      break;
+    case 'ADMINISTRADOR':
+      console.log('➡️ Redirigiendo a /admin');
+      this.router.navigate(['/admin']);
+      break;
+    default:
+      console.warn('⚠️ Rol desconocido:', role);
+      this.router.navigate(['/']);
   }
+  
+  console.log('✅ Redirección completada');
+}
 
   showRegisterForm() {
     this.showRegister = true;

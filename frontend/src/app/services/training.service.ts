@@ -150,4 +150,9 @@ getPlayerPerformance(): Observable<any> {
   return this.http.get<any>(`${this.apiUrl}/player/performance`);
 }
 
+// En training.service.ts - agregar este método
+getAllTrainings(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/trainings/all`);
+}
+
 }
