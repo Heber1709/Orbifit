@@ -61,6 +61,48 @@ export declare class AdminService {
         isActive: boolean;
         createdAt: Date;
     }>;
+    generateReports(): Promise<{
+        userStats: {
+            byRole: (import(".prisma/client").Prisma.PickEnumerable<import(".prisma/client").Prisma.UserGroupByOutputType, "role"[]> & {
+                _count: {
+                    id: number;
+                };
+            })[];
+            byStatus: (import(".prisma/client").Prisma.PickEnumerable<import(".prisma/client").Prisma.UserGroupByOutputType, "isActive"[]> & {
+                _count: {
+                    id: number;
+                };
+            })[];
+            newThisMonth: number;
+            total: number;
+        };
+        trainingStats: {
+            byType: (import(".prisma/client").Prisma.PickEnumerable<import(".prisma/client").Prisma.TrainingGroupByOutputType, "type"[]> & {
+                _count: {
+                    id: number;
+                };
+            })[];
+            monthly: any;
+            total: number;
+            active: number;
+        };
+        tournamentStats: {
+            byStatus: (import(".prisma/client").Prisma.PickEnumerable<import(".prisma/client").Prisma.TournamentGroupByOutputType, "status"[]> & {
+                _count: {
+                    id: number;
+                };
+            })[];
+            total: number;
+        };
+        systemStats: {
+            generatedAt: string;
+            storageUsed: string;
+            uptime: string;
+        };
+        generatedAt: string;
+    }>;
+    private getMonthlyTrainings;
+    private calculateStorageUsage;
     private mapRoleToSpanish;
     private mapRoleToEnglish;
 }

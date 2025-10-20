@@ -57,6 +57,13 @@ let AdminController = class AdminController {
         }
         return this.adminService.deleteUser(userId);
     }
+    async generateReports(req) {
+        console.log('📈 GET /admin/reports - Admin ID:', req.user?.userId);
+        if (req.user?.role !== 'ADMINISTRADOR') {
+            throw new Error('No autorizado');
+        }
+        return this.adminService.generateReports();
+    }
 };
 exports.AdminController = AdminController;
 __decorate([
@@ -98,6 +105,13 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number]),
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "deleteUser", null);
+__decorate([
+    (0, common_1.Get)('reports'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "generateReports", null);
 exports.AdminController = AdminController = __decorate([
     (0, common_1.Controller)('admin'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),

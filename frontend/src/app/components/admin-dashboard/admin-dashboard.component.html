@@ -1,4 +1,3 @@
-<!-- ==== ESTILOS CSS MEJORADOS ==== -->
 <style>
 /* ===== VARIABLES Y ESTILOS BASE ===== */
 .dashboard-container {
@@ -517,10 +516,6 @@
                 <span class="text-sm">Entrenamientos programados</span>
                 <span class="font-semibold text-blue-600">{{ systemStats.totalTrainings }}</span>
               </div>
-              <div class="flex justify-between items-center p-3 bg-white rounded-lg">
-                <span class="text-sm">Sistema activo</span>
-                <span class="font-semibold text-purple-600">{{ systemStats.systemUptime }}</span>
-              </div>
             </div>
           </div>
 
@@ -704,7 +699,7 @@
         </div>
       </div>
 
-      <!-- Tournaments Management View -->
+           <!-- Tournaments Management View -->
       <div *ngIf="currentView === 'tournaments'" class="fade-in">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-gray-800">Gestión de Torneos</h2>
@@ -714,7 +709,7 @@
         </div>
 
         <!-- Estadísticas de Torneos -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-2 gap-4 mb-6">
           <div class="bg-blue-500 p-4 rounded-lg text-white text-center">
             <div class="text-2xl font-bold">{{ tournamentStats.totalTournaments }}</div>
             <div class="text-sm opacity-90">Total Torneos</div>
@@ -722,14 +717,6 @@
           <div class="bg-green-500 p-4 rounded-lg text-white text-center">
             <div class="text-2xl font-bold">{{ tournamentStats.activeTournaments }}</div>
             <div class="text-sm opacity-90">Activos</div>
-          </div>
-          <div class="bg-yellow-500 p-4 rounded-lg text-white text-center">
-            <div class="text-2xl font-bold">{{ tournamentStats.scheduledTournaments }}</div>
-            <div class="text-sm opacity-90">Programados</div>
-          </div>
-          <div class="bg-gray-500 p-4 rounded-lg text-white text-center">
-            <div class="text-2xl font-bold">{{ tournamentStats.finishedTournaments }}</div>
-            <div class="text-sm opacity-90">Finalizados</div>
           </div>
         </div>
 
@@ -867,16 +854,142 @@
 
       <!-- Reports View -->
       <div *ngIf="currentView === 'reports'" class="fade-in">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Generar Reportes</h2>
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-800">Generar Reportes</h2>
+          <div class="flex gap-3">
+            <button 
+              *ngIf="reportData"
+              (click)="downloadPDF()" 
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-200 flex items-center gap-2">
+              📥 Descargar PDF
+            </button>
+            <button 
+              (click)="generateReports()" 
+              [disabled]="generatingReport"
+              class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-200 disabled:opacity-50 flex items-center gap-2">
+              {{ generatingReport ? '🔄 Generando...' : '📊 Generar Reportes' }}
+            </button>
+          </div>
+        </div>
 
-        <div class="text-center py-12">
+        <!-- Loading State -->
+        <div *ngIf="generatingReport" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
+          <p class="text-gray-600">Generando reportes con datos actuales...</p>
+        </div>
+
+        <!-- No Data State -->
+        <div *ngIf="!reportData && !generatingReport" class="text-center py-12 bg-gray-50 rounded-lg">
           <div class="text-6xl mb-4">📊</div>
-          <h3 class="text-xl font-semibold text-gray-700 mb-2">Módulo en Desarrollo</h3>
-          <p class="text-gray-500">La generación de reportes estará disponible próximamente.</p>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">Reportes del Sistema</h3>
+          <p class="text-gray-500 mb-6">Genera reportes con datos reales del sistema</p>
+          <button 
+            (click)="generateReports()" 
+            class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition duration-200">
+            🚀 Generar Mi Primer Reporte
+          </button>
+        </div>
+
+        <!-- Report Data -->
+        <div *ngIf="reportData && !generatingReport" class="space-y-6">
+          <!-- Header Info -->
+          <div class="bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-lg p-6">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="text-xl font-bold mb-2">Reporte del Sistema</h3>
+                <p class="opacity-90">Generado el {{ reportData.generatedAt }}</p>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold">{{ reportData.userStats.total }}</div>
+                <div class="text-sm opacity-90">Usuarios Totales</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Statistics -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white border rounded-lg p-6">
+              <h4 class="text-lg font-semibold text-gray-800 mb-4">👥 Distribución de Usuarios</h4>
+              <div class="space-y-3">
+                <div *ngFor="let role of reportData.userStats.byRole" 
+                     class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <span class="font-medium">{{ getRoleName(role.role) }}</span>
+                  <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                    {{ role._count.id }} usuarios
+                  </span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                  <span class="font-medium text-green-800">Nuevos este mes</span>
+                  <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                    +{{ reportData.userStats.newThisMonth }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Training Statistics -->
+            <div class="bg-white border rounded-lg p-6">
+              <h4 class="text-lg font-semibold text-gray-800 mb-4">🏋️ Estadísticas de Entrenamientos</h4>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <span class="font-medium">Total de entrenamientos</span>
+                  <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                    {{ reportData.trainingStats.total }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <span class="font-medium">Entrenamientos activos</span>
+                  <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                    {{ reportData.trainingStats.active }}
+                  </span>
+                </div>
+                <div *ngFor="let type of reportData.trainingStats.byType" 
+                     class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <span class="font-medium">{{ getTrainingTypeName(type.type) }}</span>
+                  <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                    {{ type._count.id }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Statistics -->
+          <div class="bg-white border rounded-lg p-6">
+            <h4 class="text-lg font-semibold text-gray-800 mb-4">⚙️ Estadísticas del Sistema</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="text-center p-4 bg-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600">{{ reportData.systemStats.storageUsed }}</div>
+                <div class="text-sm text-blue-800 mt-1">Almacenamiento Usado</div>
+              </div>
+              <div class="text-center p-4 bg-purple-50 rounded-lg">
+                <div class="text-2xl font-bold text-purple-600">{{ reportData.tournamentStats.total }}</div>
+                <div class="text-sm text-purple-800 mt-1">Torneos Totales</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monthly Training Activity -->
+          <div class="bg-white border rounded-lg p-6">
+            <h4 class="text-lg font-semibold text-gray-800 mb-4">📈 Actividad Mensual de Entrenamientos</h4>
+            <div class="space-y-2">
+              <div *ngFor="let month of getMonthlyTrainingData()" 
+                   class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span class="font-medium capitalize">{{ month.month }}</span>
+                <div class="flex items-center gap-4">
+                  <div class="w-32 bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-600 h-2 rounded-full" [style.width.%]="month.percentage"></div>
+                  </div>
+                  <span class="text-sm font-medium text-gray-700 w-12 text-right">
+                    {{ month.count }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
   <!-- Floating Action Buttons -->
   <button (click)="toggleCalendar()" class="floating-btn calendar-btn">
@@ -888,22 +1001,24 @@
   </button>
 </div>
 
-<!-- Calendar Sidebar - ACTUALIZADO PARA MOSTRAR TORNEOS -->
+<!-- Calendar Sidebar - ACTUALIZADO -->
 <div [class]="'sidebar calendar-sidebar ' + (calendarVisible ? 'open' : '')">
   <div class="p-0">
-    <div class="calendar-header">
+    <div class="calendar-header pt-8 pb-2"> 
       <div class="flex justify-between items-center mb-3">
-        <h2 class="text-lg font-bold">📅 Calendario</h2>
-        <button (click)="toggleCalendar()" class="calendar-close-btn">
+        <div class="flex-1 text-center">
+          <h2 class="text-lg font-bold">📅 Calendario</h2>
+        </div>
+        <button (click)="toggleCalendar()" class="calendar-close-btn bg-red-500 hover:bg-red-600">
           ×
         </button>
       </div>
       <div class="flex justify-between items-center">
-        <button (click)="previousMonth()" class="month-nav-btn text-white bg-white bg-opacity-20 hover:bg-opacity-30">
+        <button (click)="previousMonth()" class="month-nav-btn text-black bg-white bg-opacity-20 hover:bg-opacity-30">
           ‹
         </button>
         <h3 class="calendar-month">{{ currentMonth }}</h3>
-        <button (click)="nextMonth()" class="month-nav-btn text-white bg-white bg-opacity-20 hover:bg-opacity-30">
+        <button (click)="nextMonth()" class="month-nav-btn text-black bg-white bg-opacity-20 hover:bg-opacity-30">
           ›
         </button>
       </div>
@@ -976,8 +1091,12 @@
 <div [class]="'sidebar chat-sidebar ' + (chatVisible ? 'open' : '')">
   <div class="p-4 border-b bg-green-600 text-white">
     <div class="flex justify-between items-center">
-      <h2 class="text-lg font-bold">💬 Chat General</h2>
-      <button (click)="toggleChat()" class="text-white hover:text-gray-200 text-2xl">×</button>
+      <div class="flex-1 text-center"> <!-- Contenedor para centrar -->
+        <h2 class="text-lg font-bold">💬 Chat General</h2>
+      </div>
+      <button (click)="toggleChat()" class="calendar-close-btn bg-red-500 hover:bg-red-600">
+        ×
+      </button>
     </div>
   </div>
   

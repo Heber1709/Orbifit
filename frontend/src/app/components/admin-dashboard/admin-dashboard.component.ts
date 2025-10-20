@@ -3,10 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { AdminService, User } from '../../services/admin.service';
+import { AdminService, User, ReportData } from '../../services/admin.service';
 import { TournamentService, Tournament } from '../../services/tournament.service';
 import { ChatService } from '../../services/chat.service';
-import { TrainingService } from '../../services/training.service'; // 🆕 IMPORTAR SERVICIO DE ENTRENAMIENTOS
+import { TrainingService } from '../../services/training.service';
+
+// Cambiar el nombre de la importación para evitar conflictos
+import * as PDFLib from 'jspdf';
 
 interface CalendarDay {
   date: Date;
@@ -27,7 +30,7 @@ interface CalendarEvent {
   startDate?: Date;
   endDate?: Date;
   originalData?: any;
-  coachName?: string; // 🆕 AGREGAR NOMBRE DEL COACH
+  coachName?: string;
 }
 
 @Component({
@@ -53,7 +56,6 @@ export class AdminDashboardComponent implements OnInit {
   chatMessages: any[] = [];
   newMessage: string = '';
 
-  // Usuarios
   users: User[] = [];
   userSearchTerm: string = '';
   userRoleFilter: string = 'all';
@@ -71,7 +73,6 @@ export class AdminDashboardComponent implements OnInit {
 
   editingUser: User | null = null;
 
-  // Torneos
   tournaments: Tournament[] = [];
   tournamentStats = {
     totalTournaments: 0,
@@ -90,25 +91,26 @@ export class AdminDashboardComponent implements OnInit {
 
   editingTournament: Tournament | null = null;
 
-  // Estadísticas del sistema
   systemStats = {
     totalUsers: 0,
     activeUsers: 0,
     totalTrainings: 0,
     activeTournaments: 0,
     storageUsed: '0 GB',
-    systemUptime: '99.9%',
+    //systemUptime: '99.9%',
     newRegistrations: 0
   };
 
-  // 🆕 VARIABLE PARA ENTRENAMIENTOS
+  reportData: ReportData | null = null;
+  generatingReport: boolean = false;
+
   allTrainings: any[] = [];
 
   constructor(
     private authService: AuthService,
     private adminService: AdminService,
     private tournamentService: TournamentService,
-    private trainingService: TrainingService, // 🆕 INYECTAR SERVICIO
+    private trainingService: TrainingService,
     private chatService: ChatService,
     private router: Router
   ) {}
@@ -135,7 +137,7 @@ export class AdminDashboardComponent implements OnInit {
     this.loadSystemStats();
     this.loadUsers();
     this.loadTournaments();
-    this.loadAllTrainings(); // 🆕 CARGAR ENTRENAMIENTOS
+    this.loadAllTrainings();
   }
 
   loadSystemStats() {
@@ -147,7 +149,7 @@ export class AdminDashboardComponent implements OnInit {
           totalTrainings: stats.activeTrainings,
           activeTournaments: 0,
           storageUsed: '2.3 GB',
-          systemUptime: '99.9%',
+          //systemUptime: '99.9%',
           newRegistrations: 0
         };
       },
@@ -157,19 +159,18 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  // 🆕 MÉTODO PARA CARGAR TODOS LOS ENTRENAMIENTOS
   loadAllTrainings() {
     console.log('🔄 Cargando todos los entrenamientos...');
     this.trainingService.getAllTrainings().subscribe({
       next: (trainings: any[]) => {
         this.allTrainings = trainings;
         console.log('✅ Todos los entrenamientos cargados:', trainings.length);
-        this.loadCalendarEvents(); // Cargar calendario después de tener los entrenamientos
+        this.loadCalendarEvents();
       },
       error: (error: any) => {
         console.error('❌ Error cargando entrenamientos:', error);
         this.allTrainings = [];
-        this.loadCalendarEvents(); // Cargar calendario incluso si hay error
+        this.loadCalendarEvents();
       }
     });
   }
@@ -183,8 +184,8 @@ export class AdminDashboardComponent implements OnInit {
         console.log('✅ Usuarios cargados:', this.users.length);
       },
       error: (error: any) => {
-        console.error('❌ Error cargando usuarios:', error);
         this.loading = false;
+        console.error('❌ Error cargando usuarios:', error);
         alert('Error al cargar usuarios: ' + error.message);
       }
     });
@@ -196,7 +197,7 @@ export class AdminDashboardComponent implements OnInit {
         this.tournaments = tournaments;
         console.log('✅ Torneos cargados:', this.tournaments.length);
         this.loadTournamentStats();
-        this.loadCalendarEvents(); // 🆕 CARGAR CALENDARIO DESPUÉS DE TORNEOS
+        this.loadCalendarEvents();
       },
       error: (error: any) => {
         console.error('❌ Error cargando torneos:', error);
@@ -216,27 +217,170 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  // 🆕 MÉTODO CORREGIDO PARA CARGAR EVENTOS DEL CALENDARIO (ENTRENAMIENTOS + TORNEOS)
+  generateReports() {
+    this.generatingReport = true;
+    this.adminService.generateReports().subscribe({
+      next: (data: ReportData) => {
+        this.reportData = data;
+        this.generatingReport = false;
+        this.currentView = 'reports';
+        console.log('📊 Reportes generados:', data);
+      },
+      error: (error: any) => {
+        this.generatingReport = false;
+        console.error('❌ Error generando reportes:', error);
+        alert('Error al generar reportes: ' + error.message);
+      }
+    });
+  }
+
+  downloadPDF() {
+    if (this.reportData) {
+      this.generatePDF(this.reportData);
+    }
+  }
+
+  private generatePDF(reportData: ReportData): void {
+    try {
+      const doc = new PDFLib.jsPDF();
+      
+      const primaryColor = [79, 70, 229];
+      const secondaryColor = [16, 185, 129];
+      
+      doc.setFontSize(20);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text('Reporte del Sistema - Dashboard Admin', 20, 30);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Generado: ${reportData.generatedAt}`, 20, 45);
+      
+      let yPosition = 65;
+      
+      doc.setFontSize(16);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text('ESTADÍSTICAS DE USUARIOS', 20, yPosition);
+      yPosition += 15;
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`• Total de usuarios: ${reportData.userStats.total}`, 30, yPosition);
+      yPosition += 10;
+      doc.text(`• Nuevos este mes: ${reportData.userStats.newThisMonth}`, 30, yPosition);
+      yPosition += 10;
+      
+       reportData.userStats.byRole.forEach(role => {
+      doc.text(`  - ${this.getRoleName(role.role)}: ${role._count.id}`, 40, yPosition);
+      yPosition += 7;
+    });
+      
+      yPosition += 10;
+      
+      doc.setFontSize(16);
+      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+      doc.text('ESTADÍSTICAS DE ENTRENAMIENTOS', 20, yPosition);
+      yPosition += 15;
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`• Total de entrenamientos: ${reportData.trainingStats.total}`, 30, yPosition);
+      yPosition += 10;
+      doc.text(`• Entrenamientos activos: ${reportData.trainingStats.active}`, 30, yPosition);
+      yPosition += 10;
+      
+       reportData.trainingStats.byType.forEach(type => {
+      doc.text(`  - ${this.getTrainingTypeName(type.type)}: ${type._count.id}`, 40, yPosition);
+      yPosition += 7;
+    });
+      
+      yPosition += 10;
+      
+      doc.setFontSize(16);
+      doc.setTextColor(245, 158, 11);
+      doc.text('ESTADÍSTICAS DEL SISTEMA', 20, yPosition);
+      yPosition += 15;
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`• Almacenamiento usado: ${reportData.systemStats.storageUsed}`, 30, yPosition);
+      yPosition += 10;
+      //doc.text(`• Tiempo de actividad: ${reportData.systemStats.uptime}`, 30, yPosition);
+      //yPosition += 10;
+      doc.text(`• Total de torneos: ${reportData.tournamentStats.total}`, 30, yPosition);
+      
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, yPosition + 10, 190, yPosition + 10);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Reporte generado automáticamente por el Sistema Orbifit', 20, 280);
+      doc.text(`© ${new Date().getFullYear()} - Todos los derechos reservados`, 20, 285);
+      
+      const fileName = `reporte-sistema-${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      
+      console.log('✅ PDF generado exitosamente:', fileName);
+    } catch (error: any) {
+      console.error('❌ Error generando PDF:', error);
+      alert('Error al generar el PDF: ' + error.message);
+    }
+  }
+
+  getRoleName(role: string): string {
+    const roleMap: { [key: string]: string } = {
+      'ADMINISTRADOR': 'Administradores',
+      'ENTRENADOR': 'Entrenadores',
+      'JUGADOR': 'Jugadores'
+    };
+    return roleMap[role] || role;
+  }
+
+  getTrainingTypeName(type: string): string {
+    const typeMap: { [key: string]: string } = {
+      'FISICO': 'Entrenamiento Físico',
+      'TECNICO': 'Entrenamiento Técnico',
+      'TACTICO': 'Entrenamiento Táctico',
+      'PRACTICA': 'Práctica'
+    };
+    return typeMap[type] || type;
+  }
+
+  getMonthlyTrainingData(): any[] {
+    if (!this.reportData?.trainingStats?.monthly) return [];
+    
+    const monthlyData = this.reportData.trainingStats.monthly;
+    const maxCount = Math.max(...Object.values(monthlyData) as number[]);
+    
+    return Object.entries(monthlyData)
+      .map(([month, count]) => {
+        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const [year, monthNum] = month.split('-');
+        const monthName = `${monthNames[parseInt(monthNum) - 1]} ${year}`;
+        
+        return {
+          month: monthName,
+          count: count as number,
+          percentage: maxCount > 0 ? ((count as number) / maxCount) * 100 : 0
+        };
+      })
+      .sort((a, b) => a.month.localeCompare(b.month));
+  }
+
   loadCalendarEvents() {
     console.log('🔄 Cargando eventos del calendario...');
     
-    // Resetear eventos
     this.calendarEvents = {};
     
-    // 🆕 PROCESAR ENTRENAMIENTOS DE TODOS LOS COACHES
     this.processTrainingsForCalendar(this.allTrainings);
     
-    // PROCESAR TORNEOS
     this.processTournamentsForCalendar(this.tournaments);
     
     console.log('📅 Eventos del calendario procesados:', Object.keys(this.calendarEvents).length, 'días con eventos');
     console.log('📊 Resumen eventos - Entrenamientos:', this.allTrainings.length, 'Torneos:', this.tournaments.length);
     
-    // Forzar actualización del calendario
     this.generateCalendar();
   }
 
-  // 🆕 MÉTODO PARA PROCESAR ENTRENAMIENTOS EN CALENDARIO
   processTrainingsForCalendar(trainings: any[]) {
     console.log('🔄 Procesando entrenamientos para calendario:', trainings.length);
     
@@ -254,7 +398,6 @@ export class AdminDashboardComponent implements OnInit {
           minute: '2-digit' 
         });
 
-        // 🆕 OBTENER NOMBRE DEL COACH
         const coachName = training.coach ? 
           `${training.coach.firstName} ${training.coach.lastName}` : 
           'Coach no asignado';
@@ -268,7 +411,7 @@ export class AdminDashboardComponent implements OnInit {
           eventType: 'training',
           startDate: trainingDate,
           originalData: training,
-          coachName: coachName // 🆕 AGREGAR NOMBRE DEL COACH
+          coachName: coachName
         };
 
         if (!this.calendarEvents[dateStr]) {
@@ -283,7 +426,6 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  // MÉTODO PARA PROCESAR TORNEOS EN CALENDARIO
   processTournamentsForCalendar(tournaments: Tournament[]) {
     console.log('🔄 Procesando torneos para calendario:', tournaments.length);
     
@@ -320,7 +462,6 @@ export class AdminDashboardComponent implements OnInit {
         this.calendarEvents[dateStr].push(calendarEvent);
         console.log(`📅 Agregado torneo: ${tournament.name} en ${dateStr}`);
 
-        // Si el torneo tiene fecha de fin, agregar eventos para cada día intermedio
         if (tournament.endDate) {
           const endDate = new Date(tournament.endDate);
           if (!isNaN(endDate.getTime())) {
@@ -341,7 +482,6 @@ export class AdminDashboardComponent implements OnInit {
               currentDate.setDate(currentDate.getDate() + 1);
             }
 
-            // Agregar el último día también
             const endDateStr = this.formatDateForCalendar(endDate);
             if (!this.calendarEvents[endDateStr]) {
               this.calendarEvents[endDateStr] = [];
@@ -371,7 +511,7 @@ export class AdminDashboardComponent implements OnInit {
       next: (tournament: Tournament) => {
         this.loading = false;
         console.log('✅ Torneo creado:', tournament);
-        this.loadTournaments(); // Esto carga el calendario también
+        this.loadTournaments();
         
         this.newTournament = {
           name: '',
@@ -416,7 +556,7 @@ export class AdminDashboardComponent implements OnInit {
         }
         
         this.cancelTournamentEdit();
-        this.loadCalendarEvents(); // 🆕 ACTUALIZAR CALENDARIO
+        this.loadCalendarEvents();
         alert('¡Torneo actualizado exitosamente!');
       },
       error: (error: any) => {
@@ -436,7 +576,7 @@ export class AdminDashboardComponent implements OnInit {
           this.loading = false;
           this.tournaments = this.tournaments.filter(t => t.id !== tournamentId);
           this.loadTournamentStats();
-          this.loadCalendarEvents(); // 🆕 ACTUALIZAR CALENDARIO
+          this.loadCalendarEvents();
           alert('✅ Torneo eliminado correctamente');
         },
         error: (error: any) => {
@@ -452,7 +592,6 @@ export class AdminDashboardComponent implements OnInit {
     this.editingTournament = null;
   }
 
-  // 🆕 MÉTODO PARA ELIMINAR ENTRENAMIENTO DESDE ADMIN
   deleteTraining(trainingId: number) {
     const training = this.allTrainings.find(t => t.id === trainingId);
     if (training && confirm(`¿Estás seguro de eliminar el entrenamiento "${training.title}"?`)) {
@@ -461,7 +600,7 @@ export class AdminDashboardComponent implements OnInit {
         next: (response: any) => {
           this.loading = false;
           this.allTrainings = this.allTrainings.filter(t => t.id !== trainingId);
-          this.loadCalendarEvents(); // 🆕 ACTUALIZAR CALENDARIO
+          this.loadCalendarEvents();
           alert('✅ Entrenamiento eliminado correctamente');
         },
         error: (error: any) => {
@@ -473,12 +612,11 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
-  // MÉTODOS DEL CALENDARIO ACTUALIZADOS
   toggleCalendar() {
     this.calendarVisible = !this.calendarVisible;
     if (this.calendarVisible) {
       this.chatVisible = false;
-      this.loadAllTrainings(); // 🆕 CARGAR ENTRENAMIENTOS ACTUALIZADOS
+      this.loadAllTrainings();
       this.loadCalendarEvents();
     }
   }
@@ -557,7 +695,6 @@ export class AdminDashboardComponent implements OnInit {
     return classes;
   }
 
-  // MÉTODOS PARA EVENTOS EN CALENDARIO
   hasEvent(date: Date): boolean {
     const dateStr = this.formatDateForCalendar(date);
     return this.calendarEvents[dateStr] && this.calendarEvents[dateStr].length > 0;
@@ -599,7 +736,6 @@ export class AdminDashboardComponent implements OnInit {
       'TORNEO': 'event-item event-tournament'
     };
     
-    // Priorizar eventType si está disponible
     if (event.eventType) {
       return classMap[event.eventType] || 'event-item event-training';
     }
@@ -659,7 +795,6 @@ export class AdminDashboardComponent implements OnInit {
     return `${year}-${month}-${day}`;
   }
 
-  // MÉTODOS DE USUARIOS (se mantienen igual)
   createUser() {
     if (!this.newUser.firstName || !this.newUser.lastName || !this.newUser.email || !this.newUser.password) {
       alert('Por favor completa todos los campos obligatorios');

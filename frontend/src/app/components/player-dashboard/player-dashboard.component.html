@@ -1,4 +1,3 @@
-<!-- ==== CSS ORGANIZADO ==== -->
 <style>
   /* ===== VARIABLES Y RESET ===== */
   .dashboard-container {
@@ -804,25 +803,24 @@
   </button>
 </div>
 
-<!-- Calendar Sidebar -->
+<!-- Calendar Sidebar - ACTUALIZADO -->
 <div [class]="'sidebar calendar-sidebar ' + (calendarVisible ? 'open' : '')">
   <div class="p-0">
-    <!-- Header con gradiente -->
-    <div class="calendar-header">
+    <div class="calendar-header pt-8 pb-2"> 
       <div class="flex justify-between items-center mb-3">
-        <h2 class="text-lg font-bold">📅 Mi Calendario</h2>
-        <button (click)="toggleCalendar()" class="calendar-close-btn">
+        <div class="flex-1 text-center">
+          <h2 class="text-lg font-bold">📅 Calendario</h2>
+        </div>
+        <button (click)="toggleCalendar()" class="calendar-close-btn bg-red-500 hover:bg-red-600">
           ×
         </button>
       </div>
-
-      <!-- Selector de Mes -->
       <div class="flex justify-between items-center">
-        <button (click)="previousMonth()" class="month-nav-btn text-white bg-white bg-opacity-20 hover:bg-opacity-30">
+        <button (click)="previousMonth()" class="month-nav-btn text-black bg-white bg-opacity-20 hover:bg-opacity-30">
           ‹
         </button>
         <h3 class="calendar-month">{{ currentMonth }}</h3>
-        <button (click)="nextMonth()" class="month-nav-btn text-white bg-white bg-opacity-20 hover:bg-opacity-30">
+        <button (click)="nextMonth()" class="month-nav-btn text-black bg-white bg-opacity-20 hover:bg-opacity-30">
           ›
         </button>
       </div>
@@ -892,8 +890,12 @@
 <div [class]="'sidebar chat-sidebar ' + (chatVisible ? 'open' : '')">
   <div class="p-4 border-b bg-green-600 text-white">
     <div class="flex justify-between items-center">
-      <h2 class="text-lg font-bold">💬 Chat General</h2>
-      <button (click)="toggleChat()" class="text-white hover:text-gray-200 text-2xl">×</button>
+      <div class="flex-1 text-center"> <!-- Contenedor para centrar -->
+        <h2 class="text-lg font-bold">💬 Chat General</h2>
+      </div>
+      <button (click)="toggleChat()" class="calendar-close-btn bg-red-500 hover:bg-red-600">
+        ×
+      </button>
     </div>
   </div>
   

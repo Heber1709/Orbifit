@@ -25,10 +25,27 @@ export interface SystemStats {
 }
 
 export interface ReportData {
-  userStats: any;
-  trainingStats: any;
-  tournamentStats: any;
-  systemStats: any;
+  userStats: {
+    byRole: Array<{ role: string, _count: { id: number } }>;
+    byStatus: Array<{ isActive: boolean, _count: { id: number } }>;
+    newThisMonth: number;
+    total: number;
+  };
+  trainingStats: {
+    byType: Array<{ type: string, _count: { id: number } }>;
+    monthly: { [key: string]: number };
+    total: number;
+    active: number;
+  };
+  tournamentStats: {
+    byStatus: Array<{ status: string, _count: { id: number } }>;
+    total: number;
+  };
+  systemStats: {
+    generatedAt: string;
+    storageUsed: string;
+    //uptime: string;
+  };
   generatedAt: string;
 }
 

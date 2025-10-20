@@ -249,6 +249,142 @@ export class AdminService {
     }
   }
 
+  async generateReports() {
+    try {
+      console.log('📊 Generando reportes del sistema...');
+      
+      // Estadísticas de usuarios
+      const usersByRole = await this.prisma.user.groupBy({
+        by: ['role'],
+        _count: {
+          id: true
+        },
+        where: {
+          isActive: true
+        }
+      });
+
+      const usersByStatus = await this.prisma.user.groupBy({
+        by: ['isActive'],
+        _count: {
+          id: true
+        }
+      });
+
+      // Estadísticas de entrenamientos
+      const trainingsByType = await this.prisma.training.groupBy({
+        by: ['type'],
+        _count: {
+          id: true
+        }
+      });
+
+      const monthlyTrainings = await this.getMonthlyTrainings();
+
+      // Estadísticas de torneos
+      const tournamentStats = await this.prisma.tournament.groupBy({
+        by: ['status'],
+        _count: {
+          id: true
+        }
+      });
+
+      // Usuarios nuevos este mes
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const newUsersThisMonth = await this.prisma.user.count({
+        where: {
+          createdAt: {
+            gte: startOfMonth
+          }
+        }
+      });
+
+      // Entrenamientos activos
+      const activeTrainings = await this.prisma.training.count({
+        where: {
+          date: {
+            gte: new Date()
+          }
+        }
+      });
+
+      const reportData = {
+        userStats: {
+          byRole: usersByRole,
+          byStatus: usersByStatus,
+          newThisMonth: newUsersThisMonth,
+          total: await this.prisma.user.count()
+        },
+        trainingStats: {
+          byType: trainingsByType,
+          monthly: monthlyTrainings,
+          total: await this.prisma.training.count(),
+          active: activeTrainings
+        },
+        tournamentStats: {
+          byStatus: tournamentStats,
+          total: await this.prisma.tournament.count()
+        },
+        systemStats: {
+          generatedAt: new Date().toISOString(),
+          storageUsed: await this.calculateStorageUsage(),
+        },
+        generatedAt: new Date().toLocaleString('es-ES')
+      };
+
+      console.log('✅ Reportes generados exitosamente');
+      return reportData;
+    } catch (error) {
+      console.error('❌ Error generating reports:', error);
+      throw new Error('Error al generar reportes');
+    }
+  }
+
+  private async getMonthlyTrainings() {
+    try {
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const trainings = await this.prisma.training.findMany({
+        where: {
+          date: {
+            gte: sixMonthsAgo
+          }
+        },
+        select: {
+          date: true
+        }
+      });
+
+      // Agrupar por mes
+      const monthlyData = trainings.reduce((acc: any, training) => {
+        const month = training.date.toISOString().substring(0, 7); // YYYY-MM
+        acc[month] = (acc[month] || 0) + 1;
+        return acc;
+      }, {});
+
+      return monthlyData;
+    } catch (error) {
+      console.error('Error obteniendo entrenamientos mensuales:', error);
+      return {};
+    }
+  }
+
+  private async calculateStorageUsage() {
+    try {
+      // Estimación básica basada en registros en la BD
+      const userCount = await this.prisma.user.count();
+      const trainingCount = await this.prisma.training.count();
+      const tournamentCount = await this.prisma.tournament.count();
+      
+      const estimatedSize = (userCount * 2 + trainingCount * 5 + tournamentCount * 10) / 1024;
+      return `${estimatedSize.toFixed(2)} MB`;
+    } catch (error) {
+      console.error('Error calculando uso de almacenamiento:', error);
+      return '0 MB';
+    }
+  }
+
   private mapRoleToSpanish(role: string): string {
     const roleMap: { [key: string]: string } = {
       'ADMINISTRADOR': 'administrador',

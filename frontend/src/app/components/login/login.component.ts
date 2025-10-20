@@ -36,6 +36,10 @@ export class LoginComponent {
 
   // Datos de recuperación
   recoveryEmail = '';
+recoveryStep: 'email' | 'code' | 'newPassword' = 'email';
+recoveryCode = '';
+newPassword = '';
+temporalCode = '';
 
   constructor(
     private authService: AuthService,
@@ -97,13 +101,52 @@ export class LoginComponent {
   }
 
   onRecovery() {
+  if (this.recoveryStep === 'email') {
     if (this.recoveryEmail) {
-      alert('Se ha enviado un enlace de recuperación a: ' + this.recoveryEmail);
-      this.showLoginForm();
+      // Simular envío de código
+      this.temporalCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      console.log('🔐 Código de recuperación (para desarrollo):', this.temporalCode);
+      console.log('📧 Email ingresado:', this.recoveryEmail);
+      
+      this.recoveryStep = 'code';
+      alert(`📧 Código enviado a ${this.recoveryEmail}\n\nPara desarrollo: Abre la consola del navegador (F12) y busca el código.`);
     } else {
       alert('Por favor ingresa tu email');
     }
+  } else if (this.recoveryStep === 'code') {
+    if (this.recoveryCode === this.temporalCode) {
+      this.recoveryStep = 'newPassword';
+    } else {
+      alert('❌ Código incorrecto. Revisa la consola del navegador (F12).');
+    }
+  } else if (this.recoveryStep === 'newPassword') {
+    if (this.newPassword && this.newPassword.length >= 6) {
+      // Simular cambio de contraseña
+      this.registerLoading = true;
+      
+      setTimeout(() => {
+        this.registerLoading = false;
+        alert('✅ Contraseña actualizada correctamente\n\nAhora puedes iniciar sesión con tu nueva contraseña.');
+        this.resetRecovery();
+        this.showLoginForm();
+      }, 1500);
+      
+    } else {
+      alert('La contraseña debe tener al menos 6 caracteres');
+    }
   }
+}
+
+// AÑADE este método NUEVO:
+resetRecovery() {
+  this.recoveryStep = 'email';
+  this.recoveryCode = '';
+  this.newPassword = '';
+  this.temporalCode = '';
+  this.recoveryEmail = '';
+  this.registerLoading = false;
+}
 
   private redirectToDashboard(role: string) {
   console.log('🎯 Redirigiendo al dashboard. Rol:', role);
@@ -153,12 +196,13 @@ export class LoginComponent {
   }
 
   showLoginForm() {
-    this.showRegister = false;
-    this.showRecovery = false;
-    // Resetear datos del login
-    this.email = '';
-    this.password = '';
-    this.loading = false;
-    this.registerLoading = false;
-  }
+  this.showRegister = false;
+  this.showRecovery = false;
+  // Resetear datos del login
+  this.email = '';
+  this.password = '';
+  this.loading = false;
+  this.registerLoading = false;
+  this.resetRecovery(); // Limpiar también recuperación
+}
 }

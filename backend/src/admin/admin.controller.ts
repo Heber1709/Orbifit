@@ -70,4 +70,15 @@ export class AdminController {
     
     return this.adminService.deleteUser(userId);
   }
+
+  @Get('reports')
+  async generateReports(@Req() req) {
+    console.log('📈 GET /admin/reports - Admin ID:', req.user?.userId);
+    
+    if (req.user?.role !== 'ADMINISTRADOR') {
+      throw new Error('No autorizado');
+    }
+    
+    return this.adminService.generateReports();
+  }
 }
