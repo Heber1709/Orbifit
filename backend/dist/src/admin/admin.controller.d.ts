@@ -97,7 +97,6 @@ export declare class AdminController {
         systemStats: {
             generatedAt: string;
             storageUsed: string;
-            uptime: string;
         };
         generatedAt: string;
     }>;

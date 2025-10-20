@@ -64,4 +64,6 @@ export declare class UsersService {
         position: import(".prisma/client").$Enums.PlayerPosition;
         jerseyNumber: number;
     }[]>;
+    updatePassword(userId: number, newPassword: string): Promise<User>;
+    updatePasswordByEmail(email: string, newPassword: string): Promise<User>;
 }

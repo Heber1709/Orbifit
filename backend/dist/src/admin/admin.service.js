@@ -307,7 +307,6 @@ let AdminService = class AdminService {
                 systemStats: {
                     generatedAt: new Date().toISOString(),
                     storageUsed: await this.calculateStorageUsage(),
-                    uptime: '99.9%'
                 },
                 generatedAt: new Date().toLocaleString('es-ES')
             };

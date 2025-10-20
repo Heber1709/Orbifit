@@ -2,6 +2,8 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { PrismaService } from '../database/prisma.service';
 import { User, UserRole, PlayerPosition } from '@prisma/client';
 
+import * as bcrypt from 'bcrypt';
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -130,4 +132,30 @@ export class UsersService {
       },
     });
   }
+
+  // 🔐 MÉTODOS NUEVOS PARA RECUPERACIÓN DE CONTRASEÑA
+  async updatePassword(userId: number, newPassword: string): Promise<User> {
+    console.log(`🔄 Actualizando contraseña para usuario ID: ${userId}`);
+    
+    // ¡IMPORTANTE! Hashear la contraseña igual que en el registro
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { 
+        password: hashedPassword,
+        updatedAt: new Date()
+      }
+    });
+  }
+
+  async updatePasswordByEmail(email: string, newPassword: string): Promise<User> {
+    const user = await this.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    
+    return this.updatePassword(user.id, newPassword);
+  }
+
 }

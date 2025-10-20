@@ -167,7 +167,7 @@
                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono tracking-widest" 
                placeholder="ABCDEF" maxlength="6" required>
         <p class="text-sm text-blue-600 mt-2 text-center">
-          💡 Para desarrollo: Abre la consola del navegador (F12) y busca el código real.
+          💡 Para desarrollo: Puedes usar cualquier código (ej: 123456)
         </p>
         <p class="text-xs text-gray-500 mt-1 text-center">
           En producción, este código llegaría por email.
@@ -207,8 +207,8 @@
     <!-- Información para desarrollo -->
     <div *ngIf="recoveryStep === 'code'" class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
       <p class="text-sm text-yellow-800 text-center">
-        <strong>Modo Desarrollo:</strong> El código real aparece en la Consola (F12 → Console)<br>
-        Busca: <code>"🔐 Código de recuperación"</code>
+        <strong>Modo Desarrollo:</strong> Puedes usar cualquier código.<br>
+        El sistema está configurado para aceptar cualquier valor.
       </p>
     </div>
   </div>
