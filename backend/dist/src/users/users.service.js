@@ -20,6 +20,16 @@ let UsersService = class UsersService {
     async findByEmail(email) {
         return this.prisma.user.findUnique({
             where: { email },
+            select: {
+                id: true,
+                email: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                password: true,
+                role: true,
+                position: true,
+            },
         });
     }
     async findByUsername(username) {

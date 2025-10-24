@@ -3,7 +3,16 @@ import { User, UserRole, PlayerPosition } from '@prisma/client';
 export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
-    findByEmail(email: string): Promise<User | null>;
+    findByEmail(email: string): Promise<{
+        id: number;
+        email: string;
+        username: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        role: UserRole;
+        position: PlayerPosition | null;
+    } | null>;
     findByUsername(username: string): Promise<User | null>;
     findById(id: number): Promise<User | null>;
     create(userData: {

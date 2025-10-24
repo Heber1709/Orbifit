@@ -8,11 +8,31 @@ import * as bcrypt from 'bcrypt';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.prisma.user.findUnique({
-      where: { email },
-    });
-  }
+  async findByEmail(email: string): Promise<{
+  id: number;
+  email: string;
+  username: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  position: PlayerPosition | null;
+} | null> {
+  return this.prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      firstName: true,
+      lastName: true,
+      password: true,
+      role: true,
+      position: true,
+    },
+  });
+
+}
 
   async findByUsername(username: string): Promise<User | null> {
     return this.prisma.user.findUnique({
