@@ -2,22 +2,23 @@ import { Controller, Get } from '@nestjs/common';
 
 @Controller()
 export class HealthController {
-  // Raíz: cuando vayan a la URL base
+  // Ruta raíz: evita 404 en la URL base
   @Get()
   root() {
     return {
-      message: '¡Bienvenido a OrbitFit Backend!',
+      message: '¡OrbitFit Backend VIVO!',
       status: 'OK',
-      docs: '/health',  // Para ir al health
+      health: '/health',
+      timestamp: new Date().toISOString(),
     };
   }
 
-  // Health: para pruebas
+  // Ruta de prueba
   @Get('health')
   health() {
     return {
       status: 'OK',
-      message: 'Backend vivo - SIN base de datos',
+      message: 'Backend funcionando - SIN base de datos',
       timestamp: new Date().toISOString(),
     };
   }
